@@ -161,16 +161,9 @@ export function AppProvider({ children }) {
     if (!silent) setLoading(true);
     try {
       const data = await apiFetchFullEmails(authToken);
-      // A successful response means the API is live even when it returns no
-      // rows — a freshly registered account with an empty inbox is connected,
-      // not offline. (Previously an empty list read as "backend down".)
-      setIsBackendConnected(true);
       setLastSyncTime(new Date());
       if (data) {
-        // Always adopt what the database returned, including an empty list.
-        // Previously this only replaced the seeded demo rows when the backend
-        // sent >0 emails, so any failed/slow load left fabricated data on
-        // screen — the dataset was stored, but a refresh "went back to demo".
+        setIsBackendConnected(true);
         setEmails(data);
         setDataLoaded(true);
         if (!silent) {
@@ -181,9 +174,16 @@ export function AppProvider({ children }) {
             data.length > 0 ? 'success' : 'info',
           );
         }
+      } else {
+        setIsBackendConnected(false);
+        setDataLoaded(true);
+        if (!silent && !authToken.startsWith('mock-token-')) {
+          addToast('Connected to local storage (Backend sync offline)', 'info');
+        }
       }
     } catch (err) {
       setIsBackendConnected(false);
+      setDataLoaded(true);
       if (!silent) {
         addToast('Connected to local storage (Backend sync offline)', 'info');
       }
