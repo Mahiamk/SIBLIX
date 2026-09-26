@@ -68,7 +68,7 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
 
         {isSuperAdmin ? (
           /* SUPER ADMIN CONTROLS: System Oversight Only — No Shipment Processing */
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {/* Neon Database Live Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-slate-50/70 text-slate-600 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -80,11 +80,12 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
               href="/docs"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#717486]/30 bg-[#717486]/10 hover:bg-[#717486]/20 text-[#717486] text-xs font-semibold transition-colors shadow-subtle"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-[#717486]/30 bg-[#717486]/10 hover:bg-[#717486]/20 text-[#717486] text-xs font-semibold transition-colors shadow-subtle shrink-0"
               title="Open SIBLIX FastAPI Swagger Documentation"
             >
               <PhosphorIcon name="Terminal" size={14} weight="bold" />
-              <span>Swagger API Docs</span>
+              <span className="hidden sm:inline">Swagger API Docs</span>
+              <span className="sm:hidden">Swagger</span>
               <PhosphorIcon name="ArrowSquareOut" size={12} />
             </a>
           </div>
@@ -94,7 +95,8 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
             {/* Search */}
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="ml-auto lg:ml-6 flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 text-slate-500 hover:text-slate-700 text-xs transition-colors shadow-subtle lg:flex-1 lg:max-w-sm"
+              className="ml-auto lg:ml-6 flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 text-slate-500 hover:text-slate-700 text-xs transition-colors shadow-subtle shrink-0 lg:flex-1 lg:max-w-sm"
+              title="Search shipments (⌘K)"
             >
               <PhosphorIcon name="MagnifyingGlass" size={14} weight="duotone" />
               <span className="hidden sm:inline">Search shipments...</span>
@@ -104,15 +106,16 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
             </button>
 
             {/* Quick actions */}
-            <div className="flex items-center gap-2.5 lg:ml-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 icon="UploadSimple"
                 onClick={() => setUploadModalOpen(true)}
-                className="hidden sm:inline-flex"
+                className="px-2.5 sm:px-3"
+                title="Upload shipping documents"
               >
-                Upload
+                <span className="hidden sm:inline">Upload</span>
               </Button>
 
               <Button
@@ -121,10 +124,19 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
                 icon={pipelineProgress?.active && pipelineProgress?.status === 'running' ? 'Spinner' : 'Play'}
                 loading={loading}
                 onClick={() => processAll(true)}
+                className="px-2.5 sm:px-3.5"
               >
-                {pipelineProgress?.active && pipelineProgress?.status === 'running'
-                  ? `Verifying (${pipelineProgress.percentage}%)`
-                  : 'Verify All'}
+                {pipelineProgress?.active && pipelineProgress?.status === 'running' ? (
+                  <>
+                    <span className="hidden sm:inline">Verifying ({pipelineProgress.percentage}%)</span>
+                    <span className="sm:hidden">{pipelineProgress.percentage}%</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Verify All</span>
+                    <span className="sm:hidden">Verify</span>
+                  </>
+                )}
               </Button>
             </div>
           </>

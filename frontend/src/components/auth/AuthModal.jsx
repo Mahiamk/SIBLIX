@@ -107,20 +107,20 @@ export function AuthModal() {
           </button>
         </div>
 
-        {/* Compact Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {authMode === 'register' && (
             <>
               <div>
-                <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+                <label className="block text-xs sm:text-[11px] font-semibold text-slate-700 mb-1">
                   Full Name
                 </label>
                 <div className="relative">
                   <PhosphorIcon
                     name="User"
-                    size={14}
+                    size={16}
                     weight="duotone"
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     type="text"
@@ -128,21 +128,21 @@ export function AuthModal() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Captain Morgan"
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
+                    className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+                <label className="block text-xs sm:text-[11px] font-semibold text-slate-700 mb-1">
                   Work Email
                 </label>
                 <div className="relative">
                   <PhosphorIcon
                     name="EnvelopeSimple"
-                    size={14}
+                    size={16}
                     weight="duotone"
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     type="email"
@@ -150,44 +150,44 @@ export function AuthModal() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="operator@shipping.com"
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
+                    className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
                   />
                 </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
-                Organization <span className="text-slate-400 font-normal">(optional)</span>
-              </label>
-              <div className="relative">
-                <PhosphorIcon
-                  name="Buildings"
-                  size={14}
-                  weight="duotone"
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="Global Maritime Freight"
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
-                />
               </div>
-            </div>
+
+              <div>
+                <label className="block text-xs sm:text-[11px] font-semibold text-slate-700 mb-1">
+                  Organization <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <div className="relative">
+                  <PhosphorIcon
+                    name="Buildings"
+                    size={16}
+                    weight="duotone"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    placeholder="Global Maritime Freight"
+                    className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
+                  />
+                </div>
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+            <label className="block text-xs sm:text-[11px] font-semibold text-slate-700 mb-1">
               Username
             </label>
             <div className="relative">
               <PhosphorIcon
                 name="User"
-                size={14}
+                size={16}
                 weight="duotone"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
                 type="text"
@@ -196,21 +196,23 @@ export function AuthModal() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="w-full pl-9 pr-3 py-2 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+            <label className="block text-xs sm:text-[11px] font-semibold text-slate-700 mb-1">
               Password
             </label>
             <div className="relative">
               <PhosphorIcon
                 name="Lock"
-                size={14}
+                size={16}
                 weight="duotone"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -219,16 +221,16 @@ export function AuthModal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-8 pr-9 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
+                className="w-full pl-9 pr-10 py-2 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-slate-800"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
               >
                 <PhosphorIcon
                   name={showPassword ? 'EyeSlash' : 'Eye'}
-                  size={14}
+                  size={16}
                   weight="duotone"
                 />
               </button>
@@ -236,7 +238,7 @@ export function AuthModal() {
           </div>
 
           {authMode === 'register' && (
-            <p className="text-[10px] text-slate-400 -mt-1">
+            <p className="text-[11px] text-slate-400 -mt-1">
               Username 3+ characters, password 8+ characters.
             </p>
           )}
@@ -244,11 +246,11 @@ export function AuthModal() {
           <Button
             type="submit"
             variant="primary"
-            size="sm"
+            size="md"
             loading={loading}
-            className="w-full font-medium py-2 mt-1"
+            className="w-full justify-center font-semibold py-2.5 mt-2 rounded-xl text-sm shadow-sm shadow-brand-500/20"
           >
-            {authMode === 'signin' ? 'Sign In' : 'Create Account'}
+            {authMode === 'signin' ? 'Sign In to Workspace' : 'Create Account'}
           </Button>
         </form>
 

@@ -8,7 +8,19 @@ import { FIELDS } from '../constants/taxonomy';
 
 export function LandingPage() {
   const { setActiveTab, setAuthModalOpen, setAuthMode, setSelectedEmailId,
-          isAuthenticated, username } = useApp();
+          isAuthenticated, username, handleLogout } = useApp();
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile navigation menu on Escape key press
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [mobileMenuOpen]);
 
   // Interactive Demo Playground Scenario State
   const scenarios = [
@@ -117,11 +129,14 @@ export function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-canvas-light text-slate-900 font-sans selection:bg-brand-100 selection:text-brand-900">
       {/* 1. STANDALONE WEBSITE MARKETING HEADER */}
-      <header className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-slate-200/80">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div
             className="flex items-center gap-2.5 select-none cursor-pointer"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={() => {
+              setMobileMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             <div className="w-9 h-9 rounded-xl siblix-logo-badge text-white flex items-center justify-center shadow-sm">
               <PhosphorIcon name="Boat" size={20} weight="duotone" />
@@ -136,6 +151,7 @@ export function LandingPage() {
             </div>
           </div>
 
+          {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">
             <a href="#problem" className="hover:text-slate-900 transition-colors">The Problem</a>
             <a href="#solution" className="hover:text-slate-900 transition-colors">Solution Engine</a>
@@ -144,12 +160,11 @@ export function LandingPage() {
             <a href="#security" className="hover:text-slate-900 transition-colors">Enterprise Security</a>
           </nav>
 
-          {/* An already-signed-in visitor must not be shown "Sign In" — that
-              reads as having been logged out. Offer the workspace instead. */}
-          <div className="flex items-center gap-2.5">
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-2.5">
             {isAuthenticated ? (
               <>
-                <span className="hidden sm:inline text-xs text-slate-500 font-mono">
+                <span className="hidden sm:inline text-xs text-slate-500 font-mono truncate max-w-[140px]">
                   {username}
                 </span>
                 <Button
@@ -184,8 +199,171 @@ export function LandingPage() {
               </>
             )}
           </div>
+
+          {/* Mobile Right Controls: Quick CTA + Hamburger Menu Toggle */}
+          <div className="flex md:hidden items-center gap-2">
+            {isAuthenticated ? (
+              <Button
+                variant="primary"
+                size="sm"
+                iconRight="ArrowRight"
+                onClick={jumpToApp}
+                className="text-xs py-1.5 px-3 font-semibold shadow-xs"
+              >
+                Dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openAuth('signin')}
+                className="text-xs py-1.5 px-2.5 font-medium text-slate-700"
+              >
+                Sign In
+              </Button>
+            )}
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20 border border-slate-200/90 bg-white shadow-2xs"
+            >
+              <PhosphorIcon
+                name={mobileMenuOpen ? 'X' : 'List'}
+                size={20}
+                weight="bold"
+                className="text-slate-800"
+              />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Slide-down Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200/90 bg-white/98 backdrop-blur-xl px-4 py-4 shadow-xl animate-in slide-in-from-top-2 duration-150">
+            <nav className="flex flex-col space-y-1 text-sm font-medium text-slate-700">
+              <a
+                href="#problem"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <PhosphorIcon name="WarningCircle" size={17} weight="duotone" />
+                </div>
+                <span>The Problem</span>
+              </a>
+              <a
+                href="#solution"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                  <PhosphorIcon name="Cpu" size={17} weight="duotone" />
+                </div>
+                <span>Solution Engine</span>
+              </a>
+              <a
+                href="#interactive-demo"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <PhosphorIcon name="PlayCircle" size={17} weight="duotone" />
+                </div>
+                <span>Interactive Demo</span>
+              </a>
+              <a
+                href="#fields"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <PhosphorIcon name="FileText" size={17} weight="duotone" />
+                </div>
+                <span>7 Maritime Fields</span>
+              </a>
+              <a
+                href="#security"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <PhosphorIcon name="ShieldCheck" size={17} weight="duotone" />
+                </div>
+                <span>Enterprise Security</span>
+              </a>
+            </nav>
+
+            <div className="pt-3 mt-3 border-t border-slate-100 space-y-2">
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                    <span className="text-slate-500 font-medium">Signed in as</span>
+                    <span className="font-semibold text-slate-800 font-mono truncate max-w-[170px]">
+                      {username}
+                    </span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    iconRight="ArrowRight"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      jumpToApp();
+                    }}
+                    className="w-full justify-center shadow-sm shadow-brand-500/20 py-2.5 text-sm font-semibold"
+                  >
+                    Open Workspace Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon="SignOut"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout?.();
+                    }}
+                    className="w-full justify-center text-rose-600 border-rose-200 hover:bg-rose-50 py-2"
+                  >
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    iconRight="ArrowRight"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openAuth('register');
+                    }}
+                    className="w-full justify-center shadow-sm shadow-brand-500/20 py-2.5 text-sm font-semibold"
+                  >
+                    Get Started (Free Trial)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    icon="SignIn"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openAuth('signin');
+                    }}
+                    className="w-full justify-center py-2.5 text-sm font-semibold"
+                  >
+                    Sign In
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </header>
+
 
       {/* MAIN WEBSITE CONTENT */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-24">

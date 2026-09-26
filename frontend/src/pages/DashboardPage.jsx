@@ -80,19 +80,20 @@ export function DashboardPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             Operations Dashboard
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             Real-time SI vs draft BL cross-verification analytics and AI document processing pipeline
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             icon="Tray"
             onClick={() => setActiveTab('emails')}
+            className="w-full sm:w-auto justify-center text-xs"
           >
             Open Inbox
           </Button>
@@ -102,9 +103,10 @@ export function DashboardPage() {
             icon={pipelineProgress?.active && pipelineProgress?.status === 'running' ? 'Spinner' : 'Play'}
             loading={loading}
             onClick={() => processAll(true)}
+            className="w-full sm:w-auto justify-center text-xs"
           >
             {pipelineProgress?.active && pipelineProgress?.status === 'running'
-              ? `Running Pipeline (${pipelineProgress.percentage}%)`
+              ? `Running (${pipelineProgress.percentage}%)`
               : 'Run Pipeline'}
           </Button>
         </div>
@@ -172,28 +174,28 @@ export function DashboardPage() {
 
         {/* Multilingual Voice Prompt Quick Chips */}
         <div className="mt-3.5 pt-3 border-t border-brand-200/40 flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">
             Try Speaking:
           </span>
           <span
-            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors max-w-full break-words"
             title="Amharic: Show me Awash Bank shipments with weight discrepancies"
           >
             🇪🇹 <strong>Amharic:</strong> "የአዋሽ ባንክ የክብደት ልዩነት ያለባቸውን ጫነቶች አሳየኝ"
           </span>
           <span
-            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors max-w-full break-words"
             title="Afaan Oromoo: Show me shipments cleared for Modjo port"
           >
             🇪🇹 <strong>Afaan Oromoo:</strong> "Meeshaalee buufata Mojootti qophii ta'an naaf agarsiisi"
           </span>
           <span
-            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors max-w-full break-words"
           >
             🇬🇧 "Filter review queue to missing attachments"
           </span>
           <span
-            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/90 hover:bg-white text-slate-700 border border-slate-200/80 text-[11px] font-medium shadow-2xs transition-colors max-w-full break-words"
           >
             🎙️ "Approved because shipper submitted amended NBE permit via phone"
           </span>
@@ -327,7 +329,7 @@ export function DashboardPage() {
         >
           <div className="pt-2">
             <UsageChart data={usageStats} height={230} />
-            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
@@ -349,7 +351,7 @@ export function DashboardPage() {
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono">
                   <PhosphorIcon name="ClockCountdown" size={13} weight="fill" className="text-emerald-600" />
-                  Estimated Manual Hours Saved: {pipelineProgress?.hoursSaved || Math.round((total * 15) / 60)} hrs
+                  Saved: {pipelineProgress?.hoursSaved || Math.round((total * 15) / 60)} hrs
                 </span>
               </div>
             </div>
@@ -446,9 +448,9 @@ export function DashboardPage() {
                 <div
                   key={e.id}
                   onClick={() => handleRowClick(e.id)}
-                  className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/70 p-2 rounded-xl cursor-pointer transition-colors"
+                  className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-50/70 p-2.5 rounded-xl cursor-pointer transition-colors"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="p-2 rounded-lg bg-slate-100 text-slate-600 shrink-0">
                       <PhosphorIcon
                         name={e.category === 'BL_COMPARISON' ? 'GitDiff' : 'EnvelopeSimple'}
@@ -456,8 +458,8 @@ export function DashboardPage() {
                         weight="duotone"
                       />
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-semibold text-slate-800">
                           {e.id}
                         </span>
@@ -465,13 +467,13 @@ export function DashboardPage() {
                           {e.date} {e.time}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 truncate mt-0.5">
+                      <p className="text-xs text-slate-600 truncate mt-0.5" title={e.subject}>
                         {e.subject}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-center pl-11 sm:pl-0">
                     <CategoryPill category={e.category} size="sm" />
                     <StatusPill status={e.status} size="sm" />
                   </div>

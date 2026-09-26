@@ -77,7 +77,8 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
     onCloseMobile();
   };
 
-  const showLabels = !collapsed;
+  // On mobile drawer, labels are always visible regardless of desktop collapsed rail state
+  const showLabels = !collapsed || mobileOpen;
 
   return (
     <>
@@ -93,13 +94,14 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
       <aside
         id="app-sidebar"
         aria-label="Main navigation"
-        style={{ width: collapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH }}
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 transition-[width,transform] duration-200 ease-out ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 transition-[width,transform] duration-200 ease-out w-[280px] max-w-[85vw] ${
+          collapsed ? 'lg:w-[68px]' : 'lg:w-[240px]'
+        } ${
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand */}
-        <div className={`h-16 flex items-center shrink-0 border-b border-slate-100 ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
+        <div className={`h-16 flex items-center shrink-0 border-b border-slate-100 px-4 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}>
           <button
             onClick={() => go(isSuperAdmin ? 'superadmin' : 'dashboard')}
             title={isSuperAdmin ? 'SIBLIX Global — Super Admin' : 'SIBLIX.AI — Operations Desk'}
@@ -110,34 +112,32 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             }`}>
               <PhosphorIcon name={isSuperAdmin ? 'ShieldCheck' : 'Boat'} size={20} weight="duotone" />
             </div>
-            {showLabels && (
-              <span className="flex flex-col min-w-0 text-left">
-                <span className="flex items-center gap-1">
-                  <span className="font-extrabold text-base tracking-tight text-slate-900 truncate">
-                    SIBLIX
-                  </span>
-                  <span className={`text-xs font-mono font-semibold px-1.5 py-0.5 rounded border ${
-                    isSuperAdmin
-                      ? 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
-                      : 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
-                  }`}>
-                    {isSuperAdmin ? 'ROOT' : 'AI'}
-                  </span>
+            <span className={`flex flex-col min-w-0 text-left ${collapsed ? 'lg:hidden' : ''}`}>
+              <span className="flex items-center gap-1">
+                <span className="font-extrabold text-base tracking-tight text-slate-900 truncate">
+                  SIBLIX
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium tracking-wide truncate">
-                  {isSuperAdmin ? 'Super Admin' : 'Operations Desk'}
+                <span className={`text-xs font-mono font-semibold px-1.5 py-0.5 rounded border ${
+                  isSuperAdmin
+                    ? 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
+                    : 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
+                }`}>
+                  {isSuperAdmin ? 'ROOT' : 'AI'}
                 </span>
               </span>
-            )}
+              <span className="text-[10px] text-slate-400 font-medium tracking-wide truncate">
+                {isSuperAdmin ? 'Super Admin' : 'Operations Desk'}
+              </span>
+            </span>
           </button>
 
           {/* Close (mobile only) */}
           <button
             onClick={onCloseMobile}
             aria-label="Close navigation"
-            className="ml-auto lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="ml-auto lg:hidden p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            <PhosphorIcon name="X" size={18} weight="duotone" />
+            <PhosphorIcon name="X" size={20} weight="duotone" />
           </button>
         </div>
 
@@ -199,7 +199,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                 title={collapsed ? item.label : undefined}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative w-full flex items-center rounded-xl text-sm transition-colors duration-150 select-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                  collapsed ? 'justify-center h-11 px-0' : 'gap-3 px-3 py-2.5'
+                  collapsed && !mobileOpen ? 'justify-center h-11 px-0' : 'gap-3 px-3 py-2.5'
                 } ${
                   isActive
                     ? (isSuperAdmin ? 'bg-[#717486]/10 text-[#717486] font-semibold' : 'bg-brand-50 text-brand-700 font-semibold')
@@ -243,7 +243,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             onClick={() => go('landing')}
             title="Return to the public marketing & problem statement page"
             className={`w-full flex items-center rounded-xl text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-              collapsed ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
+              collapsed && !mobileOpen ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
             }`}
           >
             <PhosphorIcon name="ArrowLeft" size={15} weight="duotone" />
@@ -257,7 +257,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             rel="noopener noreferrer"
             title="Open interactive API Documentation (Swagger UI)"
             className={`w-full flex items-center rounded-xl text-xs text-slate-500 hover:text-brand-600 hover:bg-brand-50/80 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-              collapsed ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
+              collapsed && !mobileOpen ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
             }`}
           >
             <PhosphorIcon name="Code" size={15} weight="duotone" />
@@ -268,7 +268,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
           <div
             title={isSuperAdmin ? 'Connected to live Neon Database Core' : (isBackendConnected ? 'Connected to the live API' : 'Running on demo data')}
             className={`flex items-center rounded-xl text-[11px] font-medium border ${
-              collapsed ? 'justify-center h-10 px-0' : 'gap-2 px-3 py-2'
+              collapsed && !mobileOpen ? 'justify-center h-10 px-0' : 'gap-2 px-3 py-2'
             } ${
               isSuperAdmin
                 ? 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
@@ -294,7 +294,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
           </div>
 
           {/* User */}
-          <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+          <div className={`flex items-center ${collapsed && !mobileOpen ? 'flex-col gap-1' : 'gap-1'}`}>
             <button
               onClick={() => go('profile')}
               title={username ? `${username} — open your profile` : 'Open your profile'}
@@ -302,7 +302,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                 activeTab === 'profile'
                   ? 'bg-brand-50 text-brand-700 font-semibold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
-              } ${collapsed ? 'justify-center h-10 w-full px-0' : 'gap-2.5 px-3 py-2'}`}
+              } ${collapsed && !mobileOpen ? 'justify-center h-10 w-full px-0' : 'gap-2.5 px-3 py-2'}`}
             >
               <PhosphorIcon name="User" size={15} weight="duotone" />
               {showLabels && <span className="truncate">{username || 'Profile'}</span>}
@@ -312,7 +312,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
               title={`Signed in as ${username}. Click to log out.`}
               aria-label="Log out"
               className={`p-2 rounded-xl text-slate-400 hover:text-coral-600 hover:bg-coral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                collapsed ? 'w-full flex justify-center' : ''
+                collapsed && !mobileOpen ? 'w-full flex justify-center' : ''
               }`}
             >
               <PhosphorIcon name="SignOut" size={16} weight="duotone" />

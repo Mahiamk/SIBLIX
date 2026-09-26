@@ -272,51 +272,53 @@ export function RecentEscalationsTable({ isHighlighted = false }) {
           </div>
 
           {/* Quick View Controls & View Full Desk Button */}
-          <div className="flex items-center flex-wrap gap-2">
+          <div className="flex items-center flex-wrap gap-2 w-full md:w-auto">
             {/* Filter Toggle: 19 Urgent vs 68 All */}
-            <div className="flex p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium">
+            <div className="grid grid-cols-2 sm:flex p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-medium w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setFilterMode('urgent')}
-                className={`px-2.5 py-1 rounded-md transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all text-center ${
                   filterMode === 'urgent'
                     ? 'bg-white text-slate-900 font-semibold shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Urgent Escalations ({urgentEscalations.length})
+                Urgent ({urgentEscalations.length})
               </button>
               <button
                 type="button"
                 onClick={() => setFilterMode('all')}
-                className={`px-2.5 py-1 rounded-md transition-all ${
+                className={`px-2.5 py-1 rounded-md transition-all text-center ${
                   filterMode === 'all'
                     ? 'bg-white text-slate-900 font-semibold shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                All Review Queue ({allReviewItems.length})
+                All Queue ({allReviewItems.length})
               </button>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              iconRight="ArrowRight"
-              onClick={() => setActiveTab('reviews')}
-              className="text-xs text-slate-700 hover:text-brand-600"
-            >
-              Open Desk ({allReviewItems.length})
-            </Button>
+            <div className="flex items-center gap-2 ml-auto sm:ml-0">
+              <Button
+                variant="outline"
+                size="sm"
+                iconRight="ArrowRight"
+                onClick={() => setActiveTab('reviews')}
+                className="text-xs text-slate-700 hover:text-brand-600"
+              >
+                Open Desk ({allReviewItems.length})
+              </Button>
 
-            <button
-              type="button"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              title={isCollapsed ? 'Expand Drawer' : 'Collapse Drawer'}
-              className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors"
-            >
-              <PhosphorIcon name={isCollapsed ? 'CaretDown' : 'CaretUp'} size={15} />
-            </button>
+              <button
+                type="button"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                title={isCollapsed ? 'Expand Drawer' : 'Collapse Drawer'}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors"
+              >
+                <PhosphorIcon name={isCollapsed ? 'CaretDown' : 'CaretUp'} size={15} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -349,7 +351,7 @@ export function RecentEscalationsTable({ isHighlighted = false }) {
 
       {/* Drawer Body / Table Content */}
       {!isCollapsed && (
-        <div className="divide-y divide-slate-100 overflow-x-auto">
+        <div className="divide-y divide-slate-100">
           {displayItems.length === 0 ? (
             <div className="p-10 text-center space-y-2">
               <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
@@ -363,121 +365,100 @@ export function RecentEscalationsTable({ isHighlighted = false }) {
               </p>
             </div>
           ) : (
-            <div className="min-w-[850px]">
-              {/* Table Column Headers */}
-              <div className="grid grid-cols-12 gap-3 px-5 py-2.5 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                <div className="col-span-3">Email ID / Booking #</div>
-                <div className="col-span-2">Escalation Reason</div>
-                <div className="col-span-4">Side-by-Side Comparison Snippet</div>
-                <div className="col-span-3 text-right">Quick Actions</div>
-              </div>
+            <>
+              {/* Mobile Card Layout (< md) */}
+              <div className="block md:hidden divide-y divide-slate-100">
+                {displayItems.slice(0, 8).map((email) => {
+                  const bookingRef = getBookingRef(email);
+                  const snippet = getSnippet(email);
+                  const isSubmittingApprove = submittingIds[email.id] === 'approve';
+                  const isSubmittingReject = submittingIds[email.id] === 'reject';
+                  const isExpanded = expandedRowId === email.id;
 
-              {/* Rows */}
-              {displayItems.slice(0, 8).map((email) => {
-                const bookingRef = getBookingRef(email);
-                const snippet = getSnippet(email);
-                const isSubmittingApprove = submittingIds[email.id] === 'approve';
-                const isSubmittingReject = submittingIds[email.id] === 'reject';
-                const isExpanded = expandedRowId === email.id;
-
-                return (
-                  <div
-                    key={email.id}
-                    className="hover:bg-slate-50/70 transition-colors px-5 py-3.5 border-b border-slate-100 last:border-b-0"
-                  >
-                    <div className="grid grid-cols-12 gap-3 items-center">
-                      {/* Col 1: Email ID / Booking # */}
-                      <div className="col-span-3 space-y-1">
-                        <div className="flex items-center gap-2">
+                  return (
+                    <div key={email.id} className="p-4 space-y-3 hover:bg-slate-50/70 transition-colors">
+                      {/* Card Header: ID, Booking, Status */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <button
                             type="button"
                             onClick={() => handleSelectEmail(email.id)}
-                            className="font-mono text-xs font-bold text-brand-600 hover:text-brand-800 hover:underline flex items-center gap-1 group text-left"
-                            title="Open full shipment verification detail"
+                            className="font-mono text-xs font-bold text-brand-600 hover:text-brand-800 hover:underline flex items-center gap-1"
                           >
                             <span>{email.id}</span>
-                            <PhosphorIcon
-                              name="ArrowUpRight"
-                              size={11}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            />
+                            <PhosphorIcon name="ArrowUpRight" size={12} />
                           </button>
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
                             {bookingRef}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-700 font-medium truncate" title={email.subject}>
-                          {email.subject}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
-                          <span className="truncate max-w-[130px]">{email.from || email.sender}</span>
+                        <StatusPill status={email.status} size="sm" />
+                      </div>
+
+                      {/* Subject & Meta */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-800 line-clamp-2">{email.subject}</h4>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono mt-0.5">
+                          <span className="truncate max-w-[150px]">{email.from || email.sender}</span>
                           <span>•</span>
                           <span>{email.date}</span>
                         </div>
                       </div>
 
-                      {/* Col 2: Escalation Reason */}
-                      <div className="col-span-2 space-y-1">
-                        {renderReasonBadge(email)}
-                        <p className="text-[10px] text-slate-400 leading-tight">
-                          {snippet.hint}
-                        </p>
+                      {/* Reason Badge & Hint */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {renderReasonBadge(email)}
+                        </div>
+                        <p className="text-[10px] text-slate-500">{snippet.hint}</p>
                       </div>
 
-                      {/* Col 3: Side-by-side snippet */}
-                      <div className="col-span-4">
-                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1.5 text-xs">
-                          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                            <span>{snippet.field}</span>
-                            <StatusPill status={email.status} size="sm" />
+                      {/* Side-by-side snippet */}
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                          {snippet.field}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="p-2 rounded-lg bg-white border border-slate-200/60 min-w-0">
+                            <span className="block text-[9px] font-bold text-emerald-700 uppercase">
+                              {snippet.siLabel || 'SI Declared'}
+                            </span>
+                            <span className="font-mono text-[11px] text-slate-800 block truncate font-medium mt-0.5" title={snippet.siValue}>
+                              {snippet.siValue}
+                            </span>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-2 text-[11px]">
-                            {/* SI Column */}
-                            <div className="p-1.5 rounded-lg bg-white border border-slate-200/60 min-w-0">
-                              <span className="block text-[9px] font-bold text-emerald-700 uppercase">
-                                {snippet.siLabel || 'SI Declared'}
-                              </span>
-                              <span className="font-mono text-slate-800 block truncate font-medium mt-0.5" title={snippet.siValue}>
-                                {snippet.siValue}
-                              </span>
-                            </div>
-
-                            {/* BL Column */}
-                            <div
-                              className={`p-1.5 rounded-lg border min-w-0 ${
+                          <div
+                            className={`p-2 rounded-lg border min-w-0 ${
+                              snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
+                                ? 'bg-rose-50/70 border-rose-200/70'
+                                : 'bg-amber-50/70 border-amber-200/70'
+                            }`}
+                          >
+                            <span
+                              className={`block text-[9px] font-bold uppercase ${
                                 snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
-                                  ? 'bg-rose-50/70 border-rose-200/70'
-                                  : 'bg-amber-50/70 border-amber-200/70'
+                                  ? 'text-rose-700'
+                                  : 'text-amber-800'
                               }`}
                             >
-                              <span
-                                className={`block text-[9px] font-bold uppercase ${
-                                  snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
-                                    ? 'text-rose-700'
-                                    : 'text-amber-800'
-                                }`}
-                              >
-                                {snippet.blLabel || 'Carrier Draft B/L'}
-                              </span>
-                              <span
-                                className={`font-mono block truncate font-semibold mt-0.5 ${
-                                  snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
-                                    ? 'text-rose-900'
-                                    : 'text-amber-900'
-                                }`}
-                                title={snippet.blValue}
-                              >
-                                {snippet.blValue}
-                              </span>
-                            </div>
+                              {snippet.blLabel || 'Carrier Draft B/L'}
+                            </span>
+                            <span
+                              className={`font-mono text-[11px] block truncate font-semibold mt-0.5 ${
+                                snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
+                                  ? 'text-rose-900'
+                                  : 'text-amber-900'
+                              }`}
+                              title={snippet.blValue}
+                            >
+                              {snippet.blValue}
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Col 4: Inline Quick Buttons */}
-                      <div className="col-span-3 flex items-center justify-end gap-2">
-                        {/* Approve Override button */}
+                      {/* Quick Action Buttons */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
                         <Button
                           variant="outline"
                           size="sm"
@@ -485,13 +466,10 @@ export function RecentEscalationsTable({ isHighlighted = false }) {
                           loading={isSubmittingApprove}
                           disabled={isSubmittingApprove || isSubmittingReject}
                           onClick={(e) => handleApproveOverride(e, email.id)}
-                          className="text-xs bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-400 font-medium py-1.5 px-2.5 shadow-xs"
-                          title="Authorize and approve shipment override"
+                          className="text-xs bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100 hover:text-emerald-800 font-medium py-2 px-2 shadow-xs justify-center"
                         >
-                          Approve Override
+                          Approve
                         </Button>
-
-                        {/* Request Resubmission button */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -499,52 +477,232 @@ export function RecentEscalationsTable({ isHighlighted = false }) {
                           loading={isSubmittingReject}
                           disabled={isSubmittingApprove || isSubmittingReject}
                           onClick={(e) => handleRequestResubmission(e, email.id)}
-                          className="text-xs bg-rose-50 text-rose-700 border-rose-300/80 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-400 font-medium py-1.5 px-2.5 shadow-xs"
-                          title="Flag and request resubmission from carrier or customer"
+                          className="text-xs bg-rose-50 text-rose-700 border-rose-300/80 hover:bg-rose-100 hover:text-rose-800 font-medium py-2 px-2 shadow-xs justify-center"
                         >
-                          Request Resubmission
+                          Resubmit
                         </Button>
+                      </div>
 
-                        {/* Expand toggle */}
+                      {/* Expandable Context */}
+                      {isExpanded && (
+                        <div className="mt-2 text-xs bg-slate-50/70 p-2.5 rounded-xl space-y-1.5 border border-slate-100">
+                          <div className="flex items-center justify-between text-slate-500 text-[10px]">
+                            <span className="font-semibold text-slate-700">Email Body:</span>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectEmail(email.id)}
+                              className="text-brand-600 hover:underline font-medium"
+                            >
+                              View Full Audit →
+                            </button>
+                          </div>
+                          <p className="text-slate-600 font-serif text-[11px] leading-relaxed italic bg-white p-2 rounded-lg border border-slate-200/60">
+                            &ldquo;{email.body || 'No text content available in email envelope.'}&rdquo;
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="text-center pt-0.5">
                         <button
                           type="button"
                           onClick={() => setExpandedRowId(isExpanded ? null : email.id)}
-                          title="Toggle email body preview"
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                          className="text-[11px] text-slate-400 hover:text-slate-600 inline-flex items-center gap-1 mx-auto"
                         >
-                          <PhosphorIcon name={isExpanded ? 'CaretUp' : 'CaretDown'} size={14} />
+                          <span>{isExpanded ? 'Hide Details' : 'Show Details'}</span>
+                          <PhosphorIcon name={isExpanded ? 'CaretUp' : 'CaretDown'} size={12} />
                         </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* Expandable Preview Section */}
-                    {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-slate-100 text-xs bg-slate-50/70 p-3 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between text-slate-500 text-[11px]">
-                          <span className="font-semibold text-slate-700">Email Body & Investigation Context:</span>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectEmail(email.id)}
-                            className="text-brand-600 hover:underline font-medium"
-                          >
-                            Open Detailed Audit & Evidence Explorer →
-                          </button>
-                        </div>
-                        <p className="text-slate-600 font-serif text-xs leading-relaxed italic bg-white p-2.5 rounded-lg border border-slate-200/60">
-                          &ldquo;{email.body || 'No text content available in email envelope.'}&rdquo;
-                        </p>
-                      </div>
-                    )}
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <div className="min-w-[850px]">
+                  {/* Table Column Headers */}
+                  <div className="grid grid-cols-12 gap-3 px-5 py-2.5 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                    <div className="col-span-3">Email ID / Booking #</div>
+                    <div className="col-span-2">Escalation Reason</div>
+                    <div className="col-span-4">Side-by-Side Comparison Snippet</div>
+                    <div className="col-span-3 text-right">Quick Actions</div>
                   </div>
-                );
-              })}
-            </div>
+
+                  {/* Rows */}
+                  {displayItems.slice(0, 8).map((email) => {
+                    const bookingRef = getBookingRef(email);
+                    const snippet = getSnippet(email);
+                    const isSubmittingApprove = submittingIds[email.id] === 'approve';
+                    const isSubmittingReject = submittingIds[email.id] === 'reject';
+                    const isExpanded = expandedRowId === email.id;
+
+                    return (
+                      <div
+                        key={email.id}
+                        className="hover:bg-slate-50/70 transition-colors px-5 py-3.5 border-b border-slate-100 last:border-b-0"
+                      >
+                        <div className="grid grid-cols-12 gap-3 items-center">
+                          {/* Col 1: Email ID / Booking # */}
+                          <div className="col-span-3 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSelectEmail(email.id)}
+                                className="font-mono text-xs font-bold text-brand-600 hover:text-brand-800 hover:underline flex items-center gap-1 group text-left"
+                                title="Open full shipment verification detail"
+                              >
+                                <span>{email.id}</span>
+                                <PhosphorIcon
+                                  name="ArrowUpRight"
+                                  size={11}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                />
+                              </button>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                {bookingRef}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-700 font-medium truncate" title={email.subject}>
+                              {email.subject}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
+                              <span className="truncate max-w-[130px]">{email.from || email.sender}</span>
+                              <span>•</span>
+                              <span>{email.date}</span>
+                            </div>
+                          </div>
+
+                          {/* Col 2: Escalation Reason */}
+                          <div className="col-span-2 space-y-1">
+                            {renderReasonBadge(email)}
+                            <p className="text-[10px] text-slate-400 leading-tight">
+                              {snippet.hint}
+                            </p>
+                          </div>
+
+                          {/* Col 3: Side-by-side snippet */}
+                          <div className="col-span-4">
+                            <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1.5 text-xs">
+                              <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <span>{snippet.field}</span>
+                                <StatusPill status={email.status} size="sm" />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                {/* SI Column */}
+                                <div className="p-1.5 rounded-lg bg-white border border-slate-200/60 min-w-0">
+                                  <span className="block text-[9px] font-bold text-emerald-700 uppercase">
+                                    {snippet.siLabel || 'SI Declared'}
+                                  </span>
+                                  <span className="font-mono text-slate-800 block truncate font-medium mt-0.5" title={snippet.siValue}>
+                                    {snippet.siValue}
+                                  </span>
+                                </div>
+
+                                {/* BL Column */}
+                                <div
+                                  className={`p-1.5 rounded-lg border min-w-0 ${
+                                    snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
+                                      ? 'bg-rose-50/70 border-rose-200/70'
+                                      : 'bg-amber-50/70 border-amber-200/70'
+                                  }`}
+                                >
+                                  <span
+                                    className={`block text-[9px] font-bold uppercase ${
+                                      snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
+                                        ? 'text-rose-700'
+                                        : 'text-amber-800'
+                                    }`}
+                                  >
+                                    {snippet.blLabel || 'Carrier Draft B/L'}
+                                  </span>
+                                  <span
+                                    className={`font-mono block truncate font-semibold mt-0.5 ${
+                                      snippet.isMissing || snippet.isUnreadable || snippet.isWrongDoc
+                                        ? 'text-rose-900'
+                                        : 'text-amber-900'
+                                    }`}
+                                    title={snippet.blValue}
+                                  >
+                                    {snippet.blValue}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Col 4: Inline Quick Buttons */}
+                          <div className="col-span-3 flex items-center justify-end gap-2">
+                            {/* Approve Override button */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              icon="CheckCircle"
+                              loading={isSubmittingApprove}
+                              disabled={isSubmittingApprove || isSubmittingReject}
+                              onClick={(e) => handleApproveOverride(e, email.id)}
+                              className="text-xs bg-emerald-50 text-emerald-700 border-emerald-300/80 hover:bg-emerald-100 hover:text-emerald-800 hover:border-emerald-400 font-medium py-1.5 px-2.5 shadow-xs"
+                              title="Authorize and approve shipment override"
+                            >
+                              Approve Override
+                            </Button>
+
+                            {/* Request Resubmission button */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              icon="ArrowsClockwise"
+                              loading={isSubmittingReject}
+                              disabled={isSubmittingApprove || isSubmittingReject}
+                              onClick={(e) => handleRequestResubmission(e, email.id)}
+                              className="text-xs bg-rose-50 text-rose-700 border-rose-300/80 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-400 font-medium py-1.5 px-2.5 shadow-xs"
+                              title="Flag and request resubmission from carrier or customer"
+                            >
+                              Request Resubmission
+                            </Button>
+
+                            {/* Expand toggle */}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedRowId(isExpanded ? null : email.id)}
+                              title="Toggle email body preview"
+                              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                            >
+                              <PhosphorIcon name={isExpanded ? 'CaretUp' : 'CaretDown'} size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expandable Preview Section */}
+                        {isExpanded && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 text-xs bg-slate-50/70 p-3 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between text-slate-500 text-[11px]">
+                              <span className="font-semibold text-slate-700">Email Body & Investigation Context:</span>
+                              <button
+                                type="button"
+                                onClick={() => handleSelectEmail(email.id)}
+                                className="text-brand-600 hover:underline font-medium"
+                              >
+                                Open Detailed Audit & Evidence Explorer →
+                              </button>
+                            </div>
+                            <p className="text-slate-600 font-serif text-xs leading-relaxed italic bg-white p-2.5 rounded-lg border border-slate-200/60">
+                              &ldquo;{email.body || 'No text content available in email envelope.'}&rdquo;
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {/* Drawer Footer bar */}
-      <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="px-4 sm:px-5 py-2.5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-amber-500" />
           <span className="font-medium">

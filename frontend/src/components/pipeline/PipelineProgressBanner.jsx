@@ -85,9 +85,9 @@ export function PipelineProgressBanner() {
               </div>
 
               {/* Stage Progression Stepper Pills */}
-              <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1">
+              <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-1 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
                 {/* Step 1 */}
-                <span className={`flex items-center gap-1 font-medium transition-colors ${
+                <span className={`flex items-center gap-1 font-medium transition-colors shrink-0 ${
                   stage > 1 ? 'text-emerald-600 font-semibold' : stage === 1 ? 'text-brand-600 font-semibold' : 'text-slate-400'
                 }`}>
                   {stage > 1 ? (
@@ -100,7 +100,7 @@ export function PipelineProgressBanner() {
                 <span className="text-slate-300">›</span>
 
                 {/* Step 2 */}
-                <span className={`flex items-center gap-1 font-medium transition-colors ${
+                <span className={`flex items-center gap-1 font-medium transition-colors shrink-0 ${
                   stage > 2 ? 'text-emerald-600 font-semibold' : stage === 2 ? 'text-brand-600 font-semibold' : 'text-slate-400'
                 }`}>
                   {stage > 2 ? (
@@ -108,12 +108,12 @@ export function PipelineProgressBanner() {
                   ) : (
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                   )}
-                  2. Attachment OCR / Parsing
+                  2. Attachment OCR
                 </span>
                 <span className="text-slate-300">›</span>
 
                 {/* Step 3 & 4 */}
-                <span className={`flex items-center gap-1 font-medium transition-colors ${
+                <span className={`flex items-center gap-1 font-medium transition-colors shrink-0 ${
                   stage >= 4 ? 'text-emerald-600 font-semibold' : stage === 3 ? 'text-brand-600 font-semibold' : 'text-slate-400'
                 }`}>
                   {stage >= 4 ? (
@@ -121,16 +121,16 @@ export function PipelineProgressBanner() {
                   ) : (
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                   )}
-                  3 & 4. 7-Field Reconciliation
+                  3 & 4. Reconciliation
                 </span>
               </div>
             </div>
           </div>
 
           {/* Right: Operational Counters & Action Buttons */}
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap w-full md:w-auto justify-between md:justify-end">
             {/* Real-time Latency, Throughput & Cost Counters */}
-            <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 font-mono text-[11px]">
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 px-2 sm:px-2.5 py-1.5 rounded-xl border border-slate-200 font-mono text-[10px] sm:text-[11px]">
               <span className="inline-flex items-center gap-1 text-slate-600">
                 <PhosphorIcon name="Timer" size={13} className="text-slate-400" />
                 <span className="text-slate-500">Lat:</span> {avgLatency}s
@@ -138,7 +138,7 @@ export function PipelineProgressBanner() {
               <span className="text-slate-300">|</span>
               <span className="inline-flex items-center gap-1 text-brand-700 font-semibold">
                 <PhosphorIcon name="Lightning" size={13} weight="fill" className="text-brand-500" />
-                <span>{throughputDpm} docs/min</span>
+                <span>{throughputDpm} d/m</span>
               </span>
               <span className="text-slate-300">|</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
@@ -147,25 +147,27 @@ export function PipelineProgressBanner() {
               </span>
             </div>
 
-            {/* Toggle Drawer */}
-            <button
-              onClick={togglePipelineDrawer}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
-            >
-              <span>{isDrawerOpen ? 'Hide Breakdown' : 'Breakdown'}</span>
-              <PhosphorIcon name={isDrawerOpen ? 'CaretUp' : 'CaretDown'} size={12} />
-            </button>
-
-            {/* Dismiss Button */}
-            {isCompleted && (
+            <div className="flex items-center gap-1.5">
+              {/* Toggle Drawer */}
               <button
-                onClick={dismissPipelineProgress}
-                title="Dismiss banner"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                onClick={togglePipelineDrawer}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
               >
-                <PhosphorIcon name="X" size={15} />
+                <span>{isDrawerOpen ? 'Hide' : 'Breakdown'}</span>
+                <PhosphorIcon name={isDrawerOpen ? 'CaretUp' : 'CaretDown'} size={12} />
               </button>
-            )}
+
+              {/* Dismiss Button */}
+              {isCompleted && (
+                <button
+                  onClick={dismissPipelineProgress}
+                  title="Dismiss banner"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <PhosphorIcon name="X" size={15} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

@@ -33,7 +33,7 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
@@ -42,7 +42,7 @@ export function Modal({
 
       {/* Dialog content */}
       <div
-        className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-lift border border-slate-200/90 overflow-hidden transform transition-all z-10 animate-in fade-in zoom-in-95 duration-150 ${className}`}
+        className={`relative w-full ${maxWidth} my-auto bg-white rounded-2xl shadow-lift border border-slate-200/90 overflow-hidden transform transition-all z-10 animate-in fade-in zoom-in-95 duration-150 ${className}`}
       >
         {!hideHeader && (title || subtitle || onClose) && (
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
