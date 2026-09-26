@@ -225,26 +225,15 @@ export function LoginPage() {
           </form>
 
           {mode === 'signin' && (
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-              <span className="text-slate-400">Quick Fill:</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => { setUser('admin'); setPass('admin123'); }}
-                  className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-700 font-mono text-[10px] text-slate-700 transition-colors"
-                  title="Fill Admin credentials"
-                >
-                  admin / admin123
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUser('demo'); setPass('demo1234'); }}
-                  className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-700 font-mono text-[10px] text-slate-700 transition-colors"
-                  title="Fill Demo operator credentials"
-                >
-                  demo / demo1234
-                </button>
-              </div>
+            <div className="pt-2 border-t border-slate-100 text-center text-[11px] text-slate-500">
+              Don't have an account yet?{' '}
+              <button
+                type="button"
+                onClick={() => setAuthMode('register')}
+                className="font-medium text-slate-900 underline hover:text-brand-600 transition-colors"
+              >
+                Create an account
+              </button>
             </div>
           )}
 

@@ -4,220 +4,31 @@ const API_BASE = (typeof window !== 'undefined' && window.API_BASE_URL)
   ? window.API_BASE_URL
   : (import.meta.env.VITE_API_BASE_URL || '');
 
-const DEMO_USERS_KEY = 'siblix_demo_registered_users';
-
-function getStoredDemoUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(DEMO_USERS_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function saveDemoUser(userData) {
-  try {
-    const users = getStoredDemoUsers();
-    users[userData.username.toLowerCase()] = userData;
-    localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
-  } catch {}
-}
-
-export function fallbackDemoLogin(username, password) {
-  const u = (username || '').trim().toLowerCase();
-  const p = (password || '').trim();
-
-  // 1. Built-in Admin
-  if (u === 'admin' && (p === 'admin123' || p === 'admin')) {
-    return {
-      token: 'mock-token-admin-' + Date.now(),
-      username: 'admin',
-      full_name: 'Admin Lead',
-      email: 'admin@siblix.ai',
-      role: 'admin',
-      organization: 'Maritime Assurance Desk',
-    };
-  }
-
-  // 2. Built-in Demo Operator
-  if (u === 'demo' && (p === 'demo1234' || p === 'demo')) {
-    return {
-      token: 'mock-token-demo-' + Date.now(),
-      username: 'demo',
-      full_name: 'Demo Operator',
-      email: 'operator@siblix.ai',
-      role: 'operator',
-      organization: 'Modjo Dry Port Operations',
-    };
-  }
-
-  // 3. Registered demo accounts
-  const storedUsers = getStoredDemoUsers();
-  if (storedUsers[u]) {
-    const user = storedUsers[u];
-    if (user.password === p || !user.password) {
-      return {
-        token: 'mock-token-user-' + u + '-' + Date.now(),
-        username: user.username,
-        full_name: user.full_name || user.username,
-        email: user.email || `${u}@siblix.ai`,
-        role: user.role || 'operator',
-        organization: user.organization || 'Maritime Desk',
-      };
-    } else {
-      throw new Error('Invalid password for demo account ' + username);
-    }
-  }
-
-  // 4. Flexible demo entry for any valid input in demo mode
-  if (u.length >= 2 && p.length >= 3) {
-    const newUser = {
-      username: username.trim(),
-      password: p,
-      full_name: username.trim(),
-      email: `${u}@siblix.ai`,
-      role: 'operator',
-      organization: 'Maritime Operations Desk',
-    };
-    saveDemoUser(newUser);
-    return {
-      token: 'mock-token-user-' + u + '-' + Date.now(),
-      username: newUser.username,
-      full_name: newUser.full_name,
-      email: newUser.email,
-      role: 'operator',
-      organization: newUser.organization,
-    };
-  }
-
-  throw new Error('Invalid credentials. Quick fill: admin / admin123 or demo / demo1234');
-}
-
-export function fallbackDemoRegister(userData) {
-  const username = (userData.username || '').trim();
-  if (!username) throw new Error('Username is required');
-  const user = {
-    username,
-    password: userData.password,
-    full_name: userData.full_name || username,
-    email: userData.email || `${username.toLowerCase()}@siblix.ai`,
-    organization: userData.organization || 'Maritime Logistics',
-    role: 'operator',
-  };
-  saveDemoUser(user);
-  return {
-    token: 'mock-token-user-' + username.toLowerCase() + '-' + Date.now(),
-    username: user.username,
-    full_name: user.full_name,
-    email: user.email,
-    role: user.role,
-    organization: user.organization,
-  };
-}
-
 export async function apiLogin(username, password) {
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    if (res.ok) {
-      return res.json();
-    }
-    // HTTP 405 occurs on Vercel static deployment where POST is not handled by serverless function
-    // HTTP 404 occurs when API endpoint is not deployed yet
-    if (res.status === 405 || res.status === 404) {
-      return fallbackDemoLogin(username, password);
-    }
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
     let detail = 'Invalid username or password';
     try {
       const data = await res.json();
-      if (data.detail) detail = data.detail;
+      if (data.detail) detail = typeof data.detail === 'string' ? data.detail : detail;
     } catch {}
     throw new Error(detail);
-  } catch (err) {
-    if (
-      err.message?.includes('Failed to fetch') ||
-      err.message?.includes('NetworkError') ||
-      err.message?.includes('Load failed') ||
-      err.message?.includes('405')
-    ) {
-      return fallbackDemoLogin(username, password);
-    }
-    throw err;
   }
+  return res.json(); // { token, username, full_name, email, role, organization }
 }
 
-/** Validate a stored token against the server or fallback for demo sessions. */
+/** Validate a stored token against the server. Returns the account, or
+ *  throws if the session is stale/revoked — never assume a token is good. */
 export async function apiMe(token) {
-  if (!token) throw new Error('Session expired');
-  if (token.startsWith('mock-token-')) {
-    if (token.includes('admin')) {
-      return {
-        username: 'admin',
-        full_name: 'Admin Lead',
-        email: 'admin@siblix.ai',
-        role: 'admin',
-        organization: 'Maritime Assurance Desk',
-      };
-    }
-    if (token.includes('demo')) {
-      return {
-        username: 'demo',
-        full_name: 'Demo Operator',
-        email: 'operator@siblix.ai',
-        role: 'operator',
-        organization: 'Modjo Dry Port Operations',
-      };
-    }
-    const storedUsers = getStoredDemoUsers();
-    for (const [key, user] of Object.entries(storedUsers)) {
-      if (token.includes(key)) {
-        return {
-          username: user.username,
-          full_name: user.full_name || user.username,
-          email: user.email,
-          role: user.role || 'operator',
-          organization: user.organization || 'Maritime Operations Desk',
-        };
-      }
-    }
-    return {
-      username: 'operator',
-      full_name: 'Maritime Operator',
-      email: 'operator@siblix.ai',
-      role: 'operator',
-      organization: 'Maritime Operations Desk',
-    };
-  }
-
-  try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      if (res.status === 405 || res.status === 404) {
-        return {
-          username: 'operator',
-          full_name: 'Maritime Operator',
-          role: 'operator',
-          organization: 'Maritime Operations Desk',
-        };
-      }
-      throw new Error('Session expired');
-    }
-    return res.json();
-  } catch (err) {
-    if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
-      return {
-        username: 'operator',
-        full_name: 'Maritime Operator',
-        role: 'operator',
-        organization: 'Maritime Operations Desk',
-      };
-    }
-    throw err;
-  }
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Session expired');
+  return res.json();
 }
 
 export async function apiLogout(token) {
@@ -232,35 +43,20 @@ export async function apiLogout(token) {
 }
 
 export async function apiRegister(userData) {
-  try {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-    if (res.ok) {
-      return res.json();
-    }
-    if (res.status === 405 || res.status === 404) {
-      return fallbackDemoRegister(userData);
-    }
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) {
     let detail = 'Registration failed';
     try {
       const data = await res.json();
-      detail = data.detail || detail;
+      detail = typeof data.detail === 'string' ? data.detail : detail;
     } catch {}
     throw new Error(detail);
-  } catch (err) {
-    if (
-      err.message?.includes('Failed to fetch') ||
-      err.message?.includes('NetworkError') ||
-      err.message?.includes('Load failed') ||
-      err.message?.includes('405')
-    ) {
-      return fallbackDemoRegister(userData);
-    }
-    throw err;
   }
+  return res.json(); // { token, username, full_name, email, role, organization }
 }
 
 // --- the signed-in operator's own profile ---------------------------------
