@@ -81,21 +81,6 @@ export function AuthModal() {
           </div>
         </div>
 
-        {/* Floating Voice Mic Trial Notice */}
-        {authNotice && (
-          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 rounded-xl p-3 text-xs flex items-start gap-2.5 shadow-xs">
-            <div className="w-6 h-6 rounded-lg bg-[#FF6B00] text-white flex items-center justify-center shrink-0 mt-0.5">
-              <PhosphorIcon name="Microphone" size={14} weight="fill" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-amber-950 text-[12px]">Free Voice Trial Ended</p>
-              <p className="text-[11px] text-amber-900/80 mt-0.5 leading-snug">
-                {authNotice}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Compact Tab Switcher (Sign In vs Create Account) */}
         <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/70 text-xs font-medium">
           <button
