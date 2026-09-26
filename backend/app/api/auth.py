@@ -88,16 +88,20 @@ def _unb64(text: str) -> bytes:
     return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
 
 
-def create_token(username: str) -> str:
-    payload = {"sub": username, "exp": int(time.time()) + TOKEN_TTL_SECONDS,
-               "jti": secrets.token_hex(8)}
+def create_token(username: str, token_version: int = 1) -> str:
+    payload = {
+        "sub": username,
+        "ver": int(token_version or 1),
+        "exp": int(time.time()) + TOKEN_TTL_SECONDS,
+        "jti": secrets.token_hex(8),
+    }
     body = _b64(json.dumps(payload, separators=(",", ":")).encode())
     sig = _b64(hmac.new(AUTH_SECRET, body.encode(), hashlib.sha256).digest())
     return f"{body}.{sig}"
 
 
-def decode_token(token: str) -> Optional[str]:
-    """Return the username for a valid, unexpired, unrevoked token."""
+def decode_token_payload(token: str) -> Optional[dict]:
+    """Validate HMAC signature and unexpired timestamp, returning payload dict."""
     if not token or token in _revoked_tokens or token.count(".") != 1:
         return None
     body, sig = token.split(".")
@@ -110,7 +114,13 @@ def decode_token(token: str) -> Optional[str]:
         return None
     if payload.get("exp", 0) < time.time():
         return None
-    return payload.get("sub")
+    return payload
+
+
+def decode_token(token: str) -> Optional[str]:
+    """Return the username for a valid, unexpired, unrevoked token."""
+    payload = decode_token_payload(token)
+    return payload.get("sub") if payload else None
 
 
 # --------------------------------------------------------------------------
@@ -156,13 +166,45 @@ class AuthResponse(BaseModel):
 
 def _auth_response(user: User) -> AuthResponse:
     return AuthResponse(
-        token=create_token(user.username),
+        token=create_token(user.username, getattr(user, "token_version", 1) or 1),
         username=user.username,
         full_name=user.full_name,
         email=user.email,
         role=user.role,
         organization=user.organization,
     )
+
+
+def _get_user_from_token(token: str, session: Session) -> User:
+    """Validate token payload signature, expiration, and database token_version."""
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication token required")
+    payload = decode_token_payload(token)
+    if not payload or not payload.get("sub"):
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    username = payload["sub"]
+    user = session.exec(select(User).where(User.username == username)).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Account no longer exists")
+
+    # Check token version against database: if user logged out or credentials reset,
+    # older tokens are immediately expired.
+    token_ver = int(payload.get("ver", 1) or 1)
+    user_ver = int(getattr(user, "token_version", 1) or 1)
+    if token_ver != user_ver:
+        raise HTTPException(
+            status_code=401,
+            detail="Session has expired due to logout. Please sign in again.",
+        )
+
+    if getattr(user, "status", "active") == "suspended":
+        raise HTTPException(
+            status_code=403,
+            detail="Account suspended by a Super Administrator. Contact your system supervisor.",
+        )
+
+    return user
 
 
 # --------------------------------------------------------------------------
@@ -187,6 +229,7 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)):
         organization=(payload.organization or "").strip() or None,
         job_title=(payload.job_title or "").strip() or None,
         role="operator",
+        token_version=1,
     )
     session.add(user)
     session.commit()
@@ -224,21 +267,30 @@ def login(payload: LoginRequest, session: Session = Depends(get_session)):
 def me(authorization: str = Header(default=""), session: Session = Depends(get_session)):
     """Validate a stored token and return its account, so a reloaded client
     can tell a live session from a stale one instead of assuming."""
-    username = decode_token(authorization.replace("Bearer ", "").strip())
-    if not username:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user = session.exec(select(User).where(User.username == username)).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Account no longer exists")
+    token = authorization.replace("Bearer ", "").strip()
+    user = _get_user_from_token(token, session)
     return _auth_response(user)
 
 
 @router.post("/logout")
-def logout(authorization: str = Header(default="")):
+def logout(
+    authorization: str = Header(default=""),
+    session: Session = Depends(get_session),
+):
+    """Invalidate the session token both in-memory and in the database.
+    Increments token_version on User so ANY previous tokens are immediately expired.
+    """
     token = authorization.replace("Bearer ", "").strip()
     if token:
         _revoked_tokens.add(token)
-    return {"ok": True}
+        payload = decode_token_payload(token)
+        if payload and payload.get("sub"):
+            user = session.exec(select(User).where(User.username == payload["sub"])).first()
+            if user:
+                user.token_version = int(getattr(user, "token_version", 1) or 1) + 1
+                session.add(user)
+                session.commit()
+    return {"ok": True, "message": "Logged out successfully and token invalidated"}
 
 
 def require_auth(
@@ -246,14 +298,11 @@ def require_auth(
     session: Session = Depends(get_session),
 ):
     """Route dependency: the caller must present a token for an account that
-    still exists in the database."""
+    still exists in the database and has not been revoked or expired."""
     if os.environ.get("DISABLE_AUTH") == "1":
         return True
-    username = decode_token(authorization.replace("Bearer ", "").strip())
-    if not username:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    if not session.exec(select(User).where(User.username == username)).first():
-        raise HTTPException(status_code=401, detail="Account no longer exists")
+    token = authorization.replace("Bearer ", "").strip()
+    _get_user_from_token(token, session)
     return True
 
 
@@ -275,10 +324,5 @@ def get_current_user(
             status_code=401,
             detail="No account exists yet — register one via POST /auth/register",
         )
-    username = decode_token(authorization.replace("Bearer ", "").strip())
-    if not username:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user = session.exec(select(User).where(User.username == username)).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Account no longer exists")
-    return user
+    token = authorization.replace("Bearer ", "").strip()
+    return _get_user_from_token(token, session)

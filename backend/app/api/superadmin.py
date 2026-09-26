@@ -363,6 +363,8 @@ def update_user(
         new_status = payload.status.strip().lower()
         if new_status not in ("active", "suspended"):
             raise HTTPException(status_code=400, detail="Status must be 'active' or 'suspended'")
+        if new_status == "suspended":
+            target_user.token_version = int(getattr(target_user, "token_version", 1) or 1) + 1
         changes.append(f"status ({getattr(target_user, 'status', 'active')} -> {new_status})")
         target_user.status = new_status
 
@@ -432,6 +434,7 @@ def reset_user_password(
         raise HTTPException(status_code=404, detail="User account not found")
 
     target_user.password_hash = hash_password(payload.new_password)
+    target_user.token_version = int(getattr(target_user, "token_version", 1) or 1) + 1
     session.add(target_user)
     session.commit()
 

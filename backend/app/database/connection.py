@@ -53,6 +53,7 @@ _ADDED_COLUMNS = {
         ("organization", "VARCHAR"),
         ("job_title", "VARCHAR"),
         ("status", "VARCHAR DEFAULT 'active'"),
+        ("token_version", "INTEGER DEFAULT 1"),
     ],
     "documents": [
         ("shipment_id", "INTEGER"),

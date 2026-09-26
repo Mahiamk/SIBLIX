@@ -351,6 +351,7 @@ export function AppProvider({ children }) {
     setUsername('');
     setUserOrganization('');
     setUserRole('operator');
+    setIsAuthenticated(false);
     try {
       localStorage.removeItem('sdoc_token');
       localStorage.removeItem('sdoc_user');
@@ -404,6 +405,17 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Listen for session expiration events dispatched by API calls
+  useEffect(() => {
+    const handleExpired = () => {
+      clearSession();
+      setActiveTab('dashboard');
+      addToast('Your session has expired. Please sign in again to access your dashboard.', 'warning');
+    };
+    window.addEventListener('auth:session_expired', handleExpired);
+    return () => window.removeEventListener('auth:session_expired', handleExpired);
+  }, []);
+
   const handleLogin = async (user, pass) => {
     setLoading(true);
     try {
@@ -446,11 +458,18 @@ export function AppProvider({ children }) {
     }
   };
 
-  const handleLogout = () => {
-    if (token) apiLogout(token);
+  const handleLogout = async () => {
+    const curToken = token;
     clearSession();
-    setActiveTab('landing');
-    addToast('Logged out successfully', 'info');
+    setActiveTab('dashboard');
+    addToast('Logged out. Your session has expired — please sign in again to access your dashboard.', 'info');
+    if (curToken) {
+      try {
+        await apiLogout(curToken);
+      } catch (err) {
+        console.warn('Backend logout notification failed:', err);
+      }
+    }
   };
 
   const processAll = async (force = true) => {

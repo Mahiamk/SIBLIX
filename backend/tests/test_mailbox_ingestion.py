@@ -54,6 +54,8 @@ HOST,PORT="127.0.0.1",srv.port
 
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database.connection import init_db
+init_db()
 c=TestClient(app)
 ok=fail=0
 def chk(n,cond,extra=""):

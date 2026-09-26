@@ -18,5 +18,6 @@ class User(SQLModel, table=True):
     organization: Optional[str] = Field(default=None, index=True)
     job_title: Optional[str] = None
     status: str = Field(default="active")  # 'active' | 'suspended'
+    token_version: int = Field(default=1)
 
     created_at: datetime = Field(default_factory=datetime.utcnow)

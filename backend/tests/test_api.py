@@ -110,6 +110,46 @@ def test_data_routes_require_a_token():
         importlib.reload(auth_mod)
 
 
+def test_logout_invalidates_token_and_requires_relogin():
+    """Verify that logging out permanently expires the user's token across
+    all endpoints, requiring them to sign in again to regain access."""
+    # 1. Login to get a valid token
+    r = client.post("/auth/login", json={"username": _ACCOUNT["username"], "password": _ACCOUNT["password"]})
+    assert r.status_code == 200
+    token1 = r.json()["token"]
+    headers1 = {"Authorization": f"Bearer {token1}"}
+
+    # 2. Token1 works on /auth/me
+    r = client.get("/auth/me", headers=headers1)
+    assert r.status_code == 200
+    assert r.json()["username"] == _ACCOUNT["username"]
+
+    # 3. User logs out
+    r = client.post("/auth/logout", headers=headers1)
+    assert r.status_code == 200
+    assert r.json()["ok"] is True
+
+    # 4. Old token1 is now immediately expired on /auth/me
+    r = client.get("/auth/me", headers=headers1)
+    assert r.status_code == 401
+    assert "expired" in r.json()["detail"].lower()
+
+    # 5. User signs back in to get access
+    r = client.post("/auth/login", json={"username": _ACCOUNT["username"], "password": _ACCOUNT["password"]})
+    assert r.status_code == 200
+    token2 = r.json()["token"]
+    assert token2 != token1  # fresh token with incremented token_version
+    headers2 = {"Authorization": f"Bearer {token2}"}
+
+    # 6. New token grants access back to dashboard/account
+    r = client.get("/auth/me", headers=headers2)
+    assert r.status_code == 200
+    assert r.json()["username"] == _ACCOUNT["username"]
+
+    # 7. Old token remains invalid
+    assert client.get("/auth/me", headers=headers1).status_code == 401
+
+
 def test_upload_and_list_emails():
     _auth_bypass()
     r = client.post("/upload")

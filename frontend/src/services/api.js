@@ -28,13 +28,22 @@ export async function apiLogin(username, password) {
   return res.json(); // { token, username, full_name, email, role, organization }
 }
 
+export function checkAuthExpiry(res) {
+  if (res && res.status === 401 && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:session_expired'));
+  }
+}
+
 /** Validate a stored token against the server. Returns the account, or
  *  throws if the session is stale/revoked — never assume a token is good. */
 export async function apiMe(token) {
   const res = await fetch(`${API_BASE}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error('Session expired');
+  if (!res.ok) {
+    checkAuthExpiry(res);
+    throw new Error('Session expired');
+  }
   return res.json();
 }
 
