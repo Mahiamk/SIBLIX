@@ -33,12 +33,13 @@ export function AppProvider({ children }) {
   const [userRole, setUserRole] = useState(() => {
     try { return localStorage.getItem('sdoc_role') || 'operator'; } catch { return 'operator'; }
   });
-  const isAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'lead';
+  const isAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'lead' || username === 'admin';
+  const isSuperAdmin = userRole === 'superadmin' || userRole === 'admin' || username === 'admin';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   // App navigation — synchronized with browser URL path and history
-  const VALID_TABS = ['dashboard', 'emails', 'detail', 'reviews', 'evaluation', 'settings', 'profile', 'audit'];
+  const VALID_TABS = ['dashboard', 'emails', 'detail', 'reviews', 'evaluation', 'settings', 'profile', 'audit', 'superadmin'];
 
   function getInitialTab() {
     if (typeof window !== 'undefined') {
@@ -50,6 +51,7 @@ export function AppProvider({ children }) {
       if (rawPath === 'settings') return 'settings';
       if (rawPath === 'profile') return 'profile';
       if (rawPath === 'audit') return 'audit';
+      if (rawPath === 'superadmin') return 'superadmin';
       if (rawPath === 'detail') return 'detail';
     }
     try {
@@ -705,6 +707,7 @@ export function AppProvider({ children }) {
         userRole,
         setUserRole,
         isAdmin,
+        isSuperAdmin,
         isAuthenticated,
         authChecked,
         activeTab,

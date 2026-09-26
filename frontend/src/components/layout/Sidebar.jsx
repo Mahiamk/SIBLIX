@@ -26,6 +26,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
     username,
     userOrganization,
     isAdmin,
+    isSuperAdmin,
     handleLogout,
   } = useApp();
 
@@ -48,6 +49,9 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
       label: isAdmin ? 'Quality & Benchmark' : 'Quality & SLAs',
       icon: isAdmin ? 'Gauge' : 'ChartLineUp',
     },
+    ...(isSuperAdmin
+      ? [{ id: 'superadmin', label: 'Super Admin', icon: 'Crown', badge: 'Admin' }]
+      : []),
     { id: 'settings', label: 'Settings', icon: 'Gear' },
   ];
 

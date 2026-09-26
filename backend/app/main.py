@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.connection import init_db
 from app.api import (auth, emails, documents, comparison, reviews, evaluation,
-                     email_accounts, profile, shipments, audit)
+                     email_accounts, profile, shipments, audit, superadmin)
 
 app = FastAPI(
     title="AI Shipping Document Verification Platform",
@@ -81,7 +81,8 @@ def api_root():
             "shipments": "GET /shipments",
             "audit": "GET /audit",
             "email_accounts": "GET /email-accounts",
-            "profile": "GET /profile"
+            "profile": "GET /profile",
+            "superadmin": "GET /superadmin/overview"
         }
     }
 
@@ -96,3 +97,4 @@ app.include_router(email_accounts.router)
 app.include_router(profile.router)
 app.include_router(shipments.router)
 app.include_router(audit.router)
+app.include_router(superadmin.router)

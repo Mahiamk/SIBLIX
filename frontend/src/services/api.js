@@ -510,3 +510,150 @@ export async function apiExportAudits(token, organization) {
   return res.json();
 }
 
+// --------------------------------------------------------------------------
+// Super Admin API Suite
+// --------------------------------------------------------------------------
+export async function apiFetchSuperAdminOverview(token) {
+  const res = await fetch(`${API_BASE}/superadmin/overview`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail = 'Failed to fetch system overview';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiFetchSuperAdminUsers(token, filters = {}) {
+  const qs = new URLSearchParams();
+  if (filters.search) qs.set('search', filters.search);
+  if (filters.role) qs.set('role', filters.role);
+  if (filters.status) qs.set('status', filters.status);
+  if (filters.organization) qs.set('organization', filters.organization);
+
+  const query = qs.toString() ? `?${qs.toString()}` : '';
+  const res = await fetch(`${API_BASE}/superadmin/users${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail = 'Failed to load user directory';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiCreateSuperAdminUser(token, userData) {
+  const res = await fetch(`${API_BASE}/superadmin/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) {
+    let detail = 'Failed to create user';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiUpdateSuperAdminUser(token, userId, updates) {
+  const res = await fetch(`${API_BASE}/superadmin/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    let detail = 'Failed to update user';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiResetSuperAdminUserPassword(token, userId, newPassword) {
+  const res = await fetch(`${API_BASE}/superadmin/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+  if (!res.ok) {
+    let detail = 'Failed to reset password';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiDeleteSuperAdminUser(token, userId) {
+  const res = await fetch(`${API_BASE}/superadmin/users/${userId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail = 'Failed to delete user';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiFetchSuperAdminAuditLogs(token, limit = 50) {
+  const res = await fetch(`${API_BASE}/superadmin/audit-logs?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail = 'Failed to fetch audit stream';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+export async function apiRunSuperAdminMaintenance(token) {
+  const res = await fetch(`${API_BASE}/superadmin/system/maintenance`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail = 'Maintenance task failed';
+    try {
+      const data = await res.json();
+      if (data.detail) detail = data.detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+

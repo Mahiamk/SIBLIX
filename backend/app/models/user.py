@@ -17,5 +17,6 @@ class User(SQLModel, table=True):
     # organization name, which is what groups them on the profile page.
     organization: Optional[str] = Field(default=None, index=True)
     job_title: Optional[str] = None
+    status: str = Field(default="active")  # 'active' | 'suspended'
 
     created_at: datetime = Field(default_factory=datetime.utcnow)

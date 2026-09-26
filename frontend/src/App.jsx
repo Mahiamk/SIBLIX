@@ -17,6 +17,7 @@ import { EvaluationPage } from './pages/EvaluationPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AuditPage } from './pages/AuditPage';
+import { SuperAdminPage } from './pages/SuperAdminPage';
 import { LoginPage } from './pages/LoginPage';
 import { Assistant } from './components/voice/Assistant';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
@@ -103,6 +104,8 @@ export function AppContent() {
         return <SettingsPage />;
       case 'profile':
         return <ProfilePage />;
+      case 'superadmin':
+        return <SuperAdminPage />;
       default:
         return <DashboardPage />;
     }

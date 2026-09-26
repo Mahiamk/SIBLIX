@@ -203,6 +203,12 @@ def login(payload: LoginRequest, session: Session = Depends(get_session)):
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    if getattr(user, "status", "active") == "suspended":
+        raise HTTPException(
+            status_code=403,
+            detail="Account suspended by a Super Administrator. Contact your system supervisor.",
+        )
+
     # Transparently upgrade a legacy clear-text row now that we know the
     # password is correct.
     if is_legacy_hash(user.password_hash):
