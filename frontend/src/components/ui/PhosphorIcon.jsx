@@ -80,6 +80,8 @@ import {
   ShieldStar,
   LockKey,
   Globe,
+  Terminal,
+  ArrowSquareOut,
 } from '@phosphor-icons/react';
 
 const ICONS = {
@@ -118,6 +120,8 @@ const ICONS = {
   ShieldStar,
   LockKey,
   Globe,
+  Terminal,
+  ArrowSquareOut,
   Flag,
   Anchor,
   MapPin,

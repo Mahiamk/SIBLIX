@@ -33,17 +33,35 @@ export function AppProvider({ children }) {
   const [userRole, setUserRole] = useState(() => {
     try { return localStorage.getItem('sdoc_role') || 'operator'; } catch { return 'operator'; }
   });
-  const isAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'lead' || username === 'admin';
-  const isSuperAdmin = userRole === 'superadmin' || userRole === 'admin' || username === 'admin';
+  const isAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'lead';
+  const isSuperAdmin = userRole === 'superadmin' || username === 'superadmin';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   // App navigation — synchronized with browser URL path and history
-  const VALID_TABS = ['dashboard', 'emails', 'detail', 'reviews', 'evaluation', 'settings', 'profile', 'audit', 'superadmin'];
+  const VALID_TABS = [
+    'dashboard',
+    'emails',
+    'detail',
+    'reviews',
+    'evaluation',
+    'settings',
+    'profile',
+    'audit',
+    'superadmin',
+    'superadmin-users',
+    'superadmin-tenants',
+    'superadmin-telemetry',
+    'superadmin-audit',
+  ];
 
   function getInitialTab() {
+    let savedRole = '';
+    try { savedRole = localStorage.getItem('sdoc_role') || ''; } catch {}
     if (typeof window !== 'undefined') {
       const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (rawPath.startsWith('superadmin')) return rawPath;
+      if (savedRole === 'superadmin') return 'superadmin';
       if (rawPath === 'dashboard') return 'dashboard';
       if (rawPath === 'emails' || rawPath === 'inbox') return 'emails';
       if (rawPath === 'reviews') return 'reviews';
@@ -51,9 +69,9 @@ export function AppProvider({ children }) {
       if (rawPath === 'settings') return 'settings';
       if (rawPath === 'profile') return 'profile';
       if (rawPath === 'audit') return 'audit';
-      if (rawPath === 'superadmin') return 'superadmin';
       if (rawPath === 'detail') return 'detail';
     }
+    if (savedRole === 'superadmin') return 'superadmin';
     try {
       return localStorage.getItem('sdoc_tab') || 'landing';
     } catch {
@@ -308,17 +326,24 @@ export function AppProvider({ children }) {
     setToken(res.token);
     setUsername(res.full_name || res.username);
     setUserOrganization(res.organization || '');
-    setUserRole(res.role || 'operator');
+    const roleVal = res.role || 'operator';
+    setUserRole(roleVal);
     try {
       localStorage.setItem('sdoc_token', res.token);
       localStorage.setItem('sdoc_user', res.full_name || res.username);
       localStorage.setItem('sdoc_org', res.organization || '');
-      localStorage.setItem('sdoc_role', res.role || 'operator');
+      localStorage.setItem('sdoc_role', roleVal);
     } catch {}
     setIsAuthenticated(true);
     setAuthChecked(true);
     setAuthModalOpen(false);
-    setActiveTab('dashboard');
+
+    const isSA = roleVal === 'superadmin' || res.username === 'superadmin';
+    if (isSA) {
+      setActiveTab('superadmin');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const clearSession = () => {
@@ -354,12 +379,21 @@ export function AppProvider({ children }) {
         setToken(stored);
         setUsername(me.full_name || me.username);
         setUserOrganization(me.organization || '');
-        setUserRole(me.role || 'operator');
+        const roleVal = me.role || 'operator';
+        setUserRole(roleVal);
         try {
           localStorage.setItem('sdoc_org', me.organization || '');
-          localStorage.setItem('sdoc_role', me.role || 'operator');
+          localStorage.setItem('sdoc_role', roleVal);
         } catch {}
         setIsAuthenticated(true);
+
+        const isSA = roleVal === 'superadmin' || me.username === 'superadmin';
+        if (isSA) {
+          const currentTab = localStorage.getItem('sdoc_tab') || '';
+          if (!currentTab.startsWith('superadmin') && currentTab !== 'profile') {
+            setActiveTab('superadmin');
+          }
+        }
       } catch {
         if (!cancelled) clearSession();
       } finally {

@@ -31,9 +31,32 @@ const ROLE_LABELS = {
 };
 
 export function SuperAdminPage() {
-  const { token, username: currentUsername, isSuperAdmin, addToast, setActiveTab } = useApp();
+  const { token, username: currentUsername, isSuperAdmin, addToast, setActiveTab, activeTab } = useApp();
 
-  const [activeSection, setActiveSection] = useState('users'); // 'users' | 'tenants' | 'telemetry' | 'audit'
+  const getInitialSection = () => {
+    if (activeTab === 'superadmin-users') return 'users';
+    if (activeTab === 'superadmin-tenants') return 'tenants';
+    if (activeTab === 'superadmin-telemetry') return 'telemetry';
+    if (activeTab === 'superadmin-audit') return 'audit';
+    return 'overview';
+  };
+  const [activeSection, setActiveSection] = useState(getInitialSection);
+
+  useEffect(() => {
+    if (activeTab === 'superadmin-users') setActiveSection('users');
+    else if (activeTab === 'superadmin-tenants') setActiveSection('tenants');
+    else if (activeTab === 'superadmin-telemetry') setActiveSection('telemetry');
+    else if (activeTab === 'superadmin-audit') setActiveSection('audit');
+    else if (activeTab === 'superadmin') setActiveSection('overview');
+  }, [activeTab]);
+
+  const switchSection = (sec, tab) => {
+    setActiveSection(sec);
+    if (setActiveTab && tab) {
+      setActiveTab(tab);
+    }
+  };
+
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState(null);
   const [users, setUsers] = useState([]);
@@ -117,16 +140,16 @@ export function SuperAdminPage() {
     }
   }, [isSuperAdmin, token, searchQuery, roleFilter, statusFilter]);
 
-  // Load audit logs when switching to audit tab
+  // Load audit logs when switching to audit tab or overview
   useEffect(() => {
-    if (activeSection === 'audit' && token) {
+    if ((activeSection === 'audit' || activeSection === 'overview') && token && auditLogs.length === 0) {
       apiFetchSuperAdminAuditLogs(token, 100)
         .then((logs) => setAuditLogs(logs))
         .catch((err) =>
           addToast({ title: 'Failed to load audit stream', message: err.message, type: 'error' })
         );
     }
-  }, [activeSection, token, addToast]);
+  }, [activeSection, token, addToast, auditLogs.length]);
 
   // Create User Handler
   const handleCreateUser = async (e) => {
@@ -367,25 +390,37 @@ export function SuperAdminPage() {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto">
         <button
-          onClick={() => setActiveSection('users')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
+          onClick={() => switchSection('overview', 'superadmin')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
+            activeSection === 'overview'
+              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <PhosphorIcon name="ShieldCheck" size={16} weight={activeSection === 'overview' ? 'duotone' : 'regular'} />
+          <span>Command Center</span>
+        </button>
+
+        <button
+          onClick={() => switchSection('users', 'superadmin-users')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'users'
               ? 'border-purple-600 text-purple-700 bg-purple-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <PhosphorIcon name="Users" size={16} weight={activeSection === 'users' ? 'duotone' : 'regular'} />
-          <span>User Management</span>
-          <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-100 text-slate-600">
+          <span>User Directory</span>
+          <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-100 text-slate-600 font-mono">
             {users.length}
           </span>
         </button>
 
         <button
-          onClick={() => setActiveSection('tenants')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
+          onClick={() => switchSection('tenants', 'superadmin-tenants')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'tenants'
               ? 'border-purple-600 text-purple-700 bg-purple-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -393,35 +428,280 @@ export function SuperAdminPage() {
         >
           <PhosphorIcon name="Buildings" size={16} weight={activeSection === 'tenants' ? 'duotone' : 'regular'} />
           <span>Organizations & Tenants</span>
-          <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-100 text-slate-600">
+          <span className="px-1.5 py-0.5 text-[10px] rounded-full bg-slate-100 text-slate-600 font-mono">
             {overview?.total_organizations ?? 0}
           </span>
         </button>
 
         <button
-          onClick={() => setActiveSection('telemetry')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
+          onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'telemetry'
               ? 'border-purple-600 text-purple-700 bg-purple-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <PhosphorIcon name="Cpu" size={16} weight={activeSection === 'telemetry' ? 'duotone' : 'regular'} />
-          <span>System Telemetry</span>
+          <span>System Health & Telemetry</span>
         </button>
 
         <button
-          onClick={() => setActiveSection('audit')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all ${
+          onClick={() => switchSection('audit', 'superadmin-audit')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'audit'
               ? 'border-purple-600 text-purple-700 bg-purple-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
-          <PhosphorIcon name="ShieldCheck" size={16} weight={activeSection === 'audit' ? 'duotone' : 'regular'} />
+          <PhosphorIcon name="LockKey" size={16} weight={activeSection === 'audit' ? 'duotone' : 'regular'} />
           <span>Security Audit Stream</span>
         </button>
       </div>
+
+      {/* SECTION 0: COMMAND CENTER / OVERVIEW */}
+      {activeSection === 'overview' && (
+        <div className="space-y-6">
+          {/* Welcome & Global Posture */}
+          <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 p-6 text-white border border-purple-800/40 shadow-xl relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 text-[11px] font-mono font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  SIBLIX Core Engine · All Systems Operational
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  Welcome, Platform Owner
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  As the Super Administrator, you oversee the global SIBLIX operating environment: multi-tenant organizations, user identity lifecycle, serverless compute runtime, and cryptographic security auditing.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={() => setCreateModalOpen(true)}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-4 py-2.5 shadow-lg shadow-purple-600/30 border-transparent"
+                  icon={<PhosphorIcon name="UserPlus" size={16} weight="bold" />}
+                >
+                  Provision User
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
+                  className="border-purple-400/40 text-purple-200 hover:bg-purple-900/40 text-xs px-4 py-2.5"
+                  icon={<PhosphorIcon name="Cpu" size={16} weight="duotone" />}
+                >
+                  Inspect Health
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick-Launch Domain Modules */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                System Governance Domains
+              </h3>
+              <span className="text-[11px] text-slate-400">Select a module to manage</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Module 1: User Directory */}
+              <Card
+                onClick={() => switchSection('users', 'superadmin-users')}
+                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
+                    <PhosphorIcon name="Users" size={22} weight="duotone" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-purple-700 transition-colors">
+                    User Directory
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage account lifecycles, assign roles, reset passwords, and toggle active/suspended states.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="font-mono text-purple-700 font-bold">{users.length} accounts</span>
+                  <span className="text-purple-600 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
+                    Manage <PhosphorIcon name="ArrowRight" size={12} />
+                  </span>
+                </div>
+              </Card>
+
+              {/* Module 2: Organizations & Tenants */}
+              <Card
+                onClick={() => switchSection('tenants', 'superadmin-tenants')}
+                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
+                    <PhosphorIcon name="Buildings" size={22} weight="duotone" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-blue-700 transition-colors">
+                    Tenant Registry
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Monitor enterprise shipping tenants, isolated data boundaries, and per-tenant user distribution.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="font-mono text-blue-700 font-bold">{overview?.total_organizations ?? 0} tenants</span>
+                  <span className="text-blue-600 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
+                    Inspect <PhosphorIcon name="ArrowRight" size={12} />
+                  </span>
+                </div>
+              </Card>
+
+              {/* Module 3: System Health & Telemetry */}
+              <Card
+                onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
+                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
+                    <PhosphorIcon name="Cpu" size={22} weight="duotone" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">
+                    System Telemetry
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Inspect Neon serverless PostgreSQL health, Python 3.12 edge runtime, and trigger maintenance scans.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="font-mono text-emerald-700 font-bold">100% Operational</span>
+                  <span className="text-emerald-600 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
+                    Telemetry <PhosphorIcon name="ArrowRight" size={12} />
+                  </span>
+                </div>
+              </Card>
+
+              {/* Module 4: Security Audit Trail */}
+              <Card
+                onClick={() => switchSection('audit', 'superadmin-audit')}
+                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
+                    <PhosphorIcon name="LockKey" size={22} weight="duotone" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-amber-700 transition-colors">
+                    Security Logs
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Immutable event ledger with cryptographic hashes of all administrative interventions and role updates.
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="font-mono text-amber-700 font-bold">{auditLogs.length} events</span>
+                  <span className="text-amber-600 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
+                    View Logs <PhosphorIcon name="ArrowRight" size={12} />
+                  </span>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* Architecture & Infrastructure Summary Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* System Architecture */}
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <PhosphorIcon name="ShieldStar" size={20} className="text-purple-600" />
+                  <h3 className="font-bold text-slate-900 text-sm">Platform Architecture & Security</h3>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
+                  PRODUCTION
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <PhosphorIcon name="Database" size={14} />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-800 block">Neon Serverless PostgreSQL (v18 dialect)</span>
+                    <span className="text-slate-500 text-[11px]">
+                      Region `ap-southeast-1`, autoscaling 0.25 CU compute, SSL require, pool recycling at 300s.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <PhosphorIcon name="Cpu" size={14} />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-800 block">FastAPI Serverless Backend (Python 3.12)</span>
+                    <span className="text-slate-500 text-[11px]">
+                      Pure-Python CPython runtime deployed to Vercel Serverless Functions with zero binary C-extension compilation.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <PhosphorIcon name="LockKey" size={14} />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-800 block">Strict Multi-Tenant Isolation</span>
+                    <span className="text-slate-500 text-[11px]">
+                      Zero data crossover between organizations; document access scoped strictly by tenant organization keys.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Recent Security Activity Stream Preview */}
+            <Card className="p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <PhosphorIcon name="LockKey" size={20} className="text-purple-600" />
+                  <h3 className="font-bold text-slate-900 text-sm">Recent Administrative Events</h3>
+                </div>
+                <button
+                  onClick={() => switchSection('audit', 'superadmin-audit')}
+                  className="text-[11px] text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-1"
+                >
+                  Full Stream <PhosphorIcon name="ArrowRight" size={12} />
+                </button>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {auditLogs.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    {loading ? 'Loading event stream...' : 'No administrative events recorded yet.'}
+                  </div>
+                ) : (
+                  auditLogs.slice(0, 4).map((log) => (
+                    <div key={log.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-semibold text-slate-900 text-[11px]">
+                            {log.action}
+                          </span>
+                          <span className="text-[10px] text-slate-400">by {log.operator_id || 'system'}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">{log.description}</p>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* SECTION 1: USER MANAGEMENT */}
       {activeSection === 'users' && (

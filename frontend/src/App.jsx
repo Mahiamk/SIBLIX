@@ -25,7 +25,7 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 const SIDEBAR_STORAGE_KEY = 'sdoc_sidebar_collapsed';
 
 export function AppContent() {
-  const { isAuthenticated, authChecked, activeTab } = useApp();
+  const { isAuthenticated, authChecked, activeTab, isSuperAdmin } = useApp();
 
   // Desktop rail state, remembered per browser. Storage can throw in private
   // windows, so every access is guarded and falls back to "expanded".
@@ -85,8 +85,17 @@ export function AppContent() {
     );
   }
 
-  // 3. OPERATIONS APP WORKSPACE (Dashboard, Inbox, Review Queue, Inspector, Benchmark)
+  // 3. WORKSPACE VIEWS (Super Admin Platform Owner vs Operations Desk)
   const renderAppView = () => {
+    // Super Admin: Exclusively system governance & owner telemetry — NO processing features
+    if (isSuperAdmin) {
+      if (activeTab === 'profile') {
+        return <ProfilePage />;
+      }
+      return <SuperAdminPage />;
+    }
+
+    // Operations Users: Shipment Verification Workspace
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage />;
@@ -104,8 +113,6 @@ export function AppContent() {
         return <SettingsPage />;
       case 'profile':
         return <ProfilePage />;
-      case 'superadmin':
-        return <SuperAdminPage />;
       default:
         return <DashboardPage />;
     }
@@ -132,29 +139,42 @@ export function AppContent() {
           mobileNavOpen={mobileNavOpen}
         />
 
-        {/* Live Ingestion Progress Drawer / Banner */}
-        <PipelineProgressBanner />
+        {/* Live Ingestion Progress Drawer / Banner (Operators only) */}
+        {!isSuperAdmin && <PipelineProgressBanner />}
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {renderAppView()}
         </main>
 
-        {/* Operations Workspace Footer */}
+        {/* Workspace Footer */}
         <footer className="border-t border-slate-200/80 bg-white/60 py-4 text-center text-xs text-slate-400">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>
-              SIBLIX<span className="text-[#717486] font-bold">.AI</span> · Operations Verification Workspace
-            </span>
-            <span className="font-mono text-[11px] text-slate-400">
-              SIBLIX.AI · Enterprise Maritime Operations Desk
-            </span>
+            {isSuperAdmin ? (
+              <>
+                <span>
+                  SIBLIX<span className="text-purple-600 font-bold">.ROOT</span> · Platform Ownership & System Governance
+                </span>
+                <span className="font-mono text-[11px] text-slate-400">
+                  Global Multi-Tenant Control Plane · Telemetry & Oversight
+                </span>
+              </>
+            ) : (
+              <>
+                <span>
+                  SIBLIX<span className="text-[#717486] font-bold">.AI</span> · Operations Verification Workspace
+                </span>
+                <span className="font-mono text-[11px] text-slate-400">
+                  SIBLIX.AI · Enterprise Maritime Operations Desk
+                </span>
+              </>
+            )}
           </div>
         </footer>
       </div>
 
-      {/* Global Modals & Notifications */}
-      <UploadModal />
-      <SearchCommand />
+      {/* Global Modals & Notifications (Shipment operations modals suppressed for Super Admin) */}
+      {!isSuperAdmin && <UploadModal />}
+      {!isSuperAdmin && <SearchCommand />}
       <AuthModal />
       <ToastContainer />
     </div>
