@@ -874,6 +874,48 @@ ai.bindState(() => {
   };
 });
 
+// Storage key for 1-session voice trial
+const VOICE_TRIAL_STORAGE_KEY = 'siblix_voice_trial_completed';
+
+export const isVoiceTrialUsed = () => {
+  try {
+    return localStorage.getItem(VOICE_TRIAL_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const markVoiceTrialUsed = () => {
+  try {
+    localStorage.setItem(VOICE_TRIAL_STORAGE_KEY, '1');
+  } catch {}
+};
+
+export const resetVoiceTrial = () => {
+  try {
+    localStorage.removeItem(VOICE_TRIAL_STORAGE_KEY);
+  } catch {}
+};
+
+// Middleware: block voice action execution if unauthenticated user already used their 1-session trial
+ai.use(async (ctx, next, cancel) => {
+  const app = appBridgeRef.current;
+  if (!app?.isAuthenticated && isVoiceTrialUsed()) {
+    cancel();
+    ai.disconnect();
+    app?.openAuthWithNotice?.(
+      'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
+      'signin'
+    );
+    app?.addToast?.(
+      'Trial session completed. Please sign in to continue using SIBLIX Voice Assistant.',
+      'warning'
+    );
+    return;
+  }
+  return next();
+});
+
 /**
  * Assistant Component
  * Mounted ONCE in the true root of the application (App.jsx).
@@ -881,6 +923,7 @@ ai.bindState(() => {
  */
 export function Assistant() {
   const app = useApp();
+  const hasEngagedTrialRef = useRef(false);
 
   // Keep bridge ref fresh with current AppContext
   useEffect(() => {
@@ -898,6 +941,127 @@ export function Assistant() {
       });
     }
   }, [app?.username, app?.userOrganization, app?.userRole]);
+
+  // Monitor live session snapshot to enforce 1-session trial for anonymous users
+  useEffect(() => {
+    const unsubscribe = ai.subscribe(() => {
+      const snap = ai.getSnapshot();
+      const currentApp = appBridgeRef.current;
+      if (!currentApp) return;
+
+      const isAuthenticated = currentApp.isAuthenticated;
+      const trialCompleted = isVoiceTrialUsed();
+
+      // Case 1: Unauthenticated user tries to start voice assistant after completing trial
+      if (!isAuthenticated && trialCompleted) {
+        if (
+          snap.status === 'connecting' ||
+          snap.status === 'listening' ||
+          snap.status === 'thinking' ||
+          snap.status === 'speaking'
+        ) {
+          ai.disconnect();
+          currentApp.openAuthWithNotice?.(
+            'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
+            'signin'
+          );
+          currentApp.addToast?.(
+            'Free trial session ended. Please sign in to use hands-free voice triage.',
+            'warning'
+          );
+          return;
+        }
+      }
+
+      // Case 2: Unauthenticated user is using their first trial session
+      if (!isAuthenticated && !trialCompleted) {
+        // Track when they engage in an active session (talk or receive audio)
+        if (
+          snap.status === 'listening' ||
+          snap.status === 'speaking' ||
+          snap.status === 'executing' ||
+          (snap.messages && snap.messages.length > 0)
+        ) {
+          hasEngagedTrialRef.current = true;
+        }
+
+        // When the first trial session finishes
+        if (hasEngagedTrialRef.current && (snap.status === 'idle' || snap.endedSession)) {
+          markVoiceTrialUsed();
+          hasEngagedTrialRef.current = false;
+          currentApp.addToast?.(
+            'Your free trial voice session has ended. Sign in anytime to unlock unlimited hands-free voice triage!',
+            'info'
+          );
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Intercept clicks on the floating launcher mic button if trial has expired
+  useEffect(() => {
+    const handleCaptureClick = (e) => {
+      const currentApp = appBridgeRef.current;
+      if (currentApp?.isAuthenticated) return;
+      if (!isVoiceTrialUsed()) return;
+
+      // Detect if click was on or inside the Voxide launcher button or widget container
+      const target = e.target;
+      const isLauncher =
+        target &&
+        target.closest &&
+        (target.closest('button[aria-label*="voice" i]') ||
+          target.closest('button[aria-label*="voxide" i]') ||
+          target.closest('button[title*="voice" i]') ||
+          target.closest('button[title*="voxide" i]') ||
+          target.closest('[class*="voxide"]') ||
+          target.closest('[class*="launcher"]'));
+
+      if (isLauncher) {
+        e.preventDefault();
+        e.stopPropagation();
+        ai.disconnect();
+        currentApp?.openAuthWithNotice?.(
+          'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
+          'signin'
+        );
+        currentApp?.addToast?.(
+          'Please sign in to continue using SIBLIX Voice Assistant after your trial session.',
+          'warning'
+        );
+      }
+    };
+
+    window.addEventListener('click', handleCaptureClick, true);
+    return () => window.removeEventListener('click', handleCaptureClick, true);
+  }, []);
+
+  // Intercept hands-free hotkey (Alt+V) if trial has expired
+  useEffect(() => {
+    const handleHotkey = (e) => {
+      if (e.altKey && (e.key === 'v' || e.key === 'V')) {
+        const currentApp = appBridgeRef.current;
+        if (!currentApp?.isAuthenticated && isVoiceTrialUsed()) {
+          e.preventDefault();
+          e.stopPropagation();
+          ai.disconnect();
+          currentApp?.openAuthWithNotice?.(
+            'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
+            'signin'
+          );
+          currentApp?.addToast?.(
+            'Please sign in to continue using SIBLIX Voice Assistant after your trial session.',
+            'warning'
+          );
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleHotkey, true);
+    return () => window.removeEventListener('keydown', handleHotkey, true);
+  }, []);
 
   // Render VoxideWidget passing bright orange accentColor to ensure floating message button is bright orange
   return <VoxideWidget client={ai} accentColor="#FF6B00" />;

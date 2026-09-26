@@ -61,6 +61,13 @@ export function AppProvider({ children }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'register'
+  const [authNotice, setAuthNotice] = useState('');
+
+  const openAuthWithNotice = (noticeText = '', mode = 'signin') => {
+    setAuthNotice(noticeText);
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
 
   // Emails & Data
   const [emails, setEmails] = useState(INITIAL_EMAILS);
@@ -689,6 +696,9 @@ export function AppProvider({ children }) {
         setAuthModalOpen,
         authMode,
         setAuthMode,
+        authNotice,
+        setAuthNotice,
+        openAuthWithNotice,
         toasts,
         addToast,
         removeToast,

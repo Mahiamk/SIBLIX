@@ -10,10 +10,17 @@ export function AuthModal() {
     setAuthModalOpen,
     authMode,
     setAuthMode,
+    authNotice,
+    setAuthNotice,
     handleLogin,
     handleRegister,
     loading,
   } = useApp();
+
+  const handleClose = () => {
+    setAuthModalOpen(false);
+    if (setAuthNotice) setAuthNotice('');
+  };
 
   // Form states
   const [username, setUsername] = useState('');
@@ -41,7 +48,7 @@ export function AuthModal() {
   return (
     <Modal
       isOpen={authModalOpen}
-      onClose={() => setAuthModalOpen(false)}
+      onClose={handleClose}
       maxWidth="max-w-sm"
       hideHeader={true}
       contentClassName="p-5"
@@ -50,7 +57,7 @@ export function AuthModal() {
         {/* Close Button */}
         <button
           type="button"
-          onClick={() => setAuthModalOpen(false)}
+          onClick={handleClose}
           className="absolute -top-1 -right-1 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           title="Close modal"
         >
@@ -73,6 +80,21 @@ export function AuthModal() {
             </p>
           </div>
         </div>
+
+        {/* Floating Voice Mic Trial Notice */}
+        {authNotice && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 rounded-xl p-3 text-xs flex items-start gap-2.5 shadow-xs">
+            <div className="w-6 h-6 rounded-lg bg-[#FF6B00] text-white flex items-center justify-center shrink-0 mt-0.5">
+              <PhosphorIcon name="Microphone" size={14} weight="fill" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-amber-950 text-[12px]">Free Voice Trial Ended</p>
+              <p className="text-[11px] text-amber-900/80 mt-0.5 leading-snug">
+                {authNotice}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Compact Tab Switcher (Sign In vs Create Account) */}
         <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/70 text-xs font-medium">
