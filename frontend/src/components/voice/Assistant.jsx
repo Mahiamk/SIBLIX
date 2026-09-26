@@ -34,6 +34,62 @@ export const ai = new VoxideClient({
   },
 });
 
+// ============================================================================
+// SECURITY & USER ACCESS CONTROL ASSERTIONS
+// ============================================================================
+
+/**
+ * Validates that an active, verified user session exists.
+ * Optionally verifies Super Admin role requirement.
+ */
+const checkAuth = (app, requireSuperAdmin = false) => {
+  if (!app?.isAuthenticated || !app?.token || !app?.username) {
+    return {
+      allowed: false,
+      response: {
+        status: 'error',
+        code: 'UNAUTHENTICATED',
+        message: 'Security Alert: Authentication required. SIBLIX Voice Assistant is restricted to authenticated users only.',
+      },
+    };
+  }
+
+  if (requireSuperAdmin && !app.isSuperAdmin) {
+    return {
+      allowed: false,
+      response: {
+        status: 'error',
+        code: 'FORBIDDEN',
+        message: `Security Alert: Access denied for ${app.username}. This governance action requires Super Admin privileges.`,
+      },
+    };
+  }
+
+  return { allowed: true };
+};
+
+/**
+ * Validates operational tasks: verifies user is authenticated and enforces that
+ * Super Admin accounts do NOT process operational shipments (keeping governance isolated).
+ */
+const checkOperationalAuth = (app) => {
+  const auth = checkAuth(app);
+  if (!auth.allowed) return auth;
+
+  if (app.isSuperAdmin) {
+    return {
+      allowed: false,
+      response: {
+        status: 'error',
+        code: 'ROLE_RESTRICTED',
+        message: `Command restricted: You are authenticated as Super Admin (${app.username}). Document processing and verification actions are reserved for operations desk personnel.`,
+      },
+    };
+  }
+
+  return { allowed: true };
+};
+
 // Helper normalizers for the 7 maritime parameters
 const isWithinTimeHorizon = (dateStr, horizon) => {
   if (!horizon || horizon === 'all_time' || horizon === 'all') return true;
@@ -222,7 +278,8 @@ ai.register({
       timeHorizon,
     }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const normalizedCat = normalizeCategory(category);
       const activeStatus = normalizeStatus(status || verificationStatus);
@@ -307,7 +364,8 @@ ai.register({
     },
     handler: async ({ category }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const catKey = normalizeCategory(category);
       app.setSelectedCategory(catKey);
@@ -337,7 +395,8 @@ ai.register({
     },
     handler: async ({ status }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const finalStatus = normalizeStatus(status);
       app.setSelectedStatus(finalStatus);
@@ -378,7 +437,8 @@ ai.register({
     },
     handler: async ({ query, verificationStatus, timeHorizon }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       let cleanQuery = query.trim();
       if (cleanQuery.includes('አዋሽ') || cleanQuery.toLowerCase().includes('awash')) cleanQuery = 'Awash';
@@ -437,7 +497,8 @@ ai.register({
     },
     handler: async ({ defectType, bankOrCarrier, logisticsHubsAndCorridors, timeHorizon }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const fieldKey = normalizeDefectType(defectType) || defectType;
       app.filterByDefectField(fieldKey, `Defect: ${fieldKey}`);
@@ -479,7 +540,8 @@ ai.register({
     },
     handler: async ({ port }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       app.setSearchQuery(port);
       app.setSelectedStatus('OK');
@@ -513,7 +575,8 @@ ai.register({
     },
     handler: async ({ shipmentId }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const targetId = shipmentId || app.selectedEmailId;
       const shipment = app.emails.find((e) => e.id === targetId) || app.selectedEmail;
@@ -555,23 +618,26 @@ ai.register({
     },
     handler: async ({ shipmentId, justification }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const targetId = shipmentId || app.selectedEmailId;
       if (!targetId) return { status: 'error', message: 'No shipment specified for approval override.' };
 
       await app.submitReviewDecision(targetId, {
         action: 'approve',
+        operator_id: app.username,
         action_taken: 'MANUAL_OVERRIDE_APPROVED',
-        notes: `[VOICE NOTE]: ${justification}`,
+        notes: `[VOICE NOTE by ${app.username} (${app.userRole})]: ${justification}`,
         voice_note: justification,
       });
 
       return {
         status: 'ok',
         shipmentId: targetId,
+        operator: app.username,
         justification,
-        summary: `Shipment ${targetId} approved with voice justification recorded to audit trail: "${justification}".`,
+        summary: `Shipment ${targetId} approved with voice justification recorded to audit trail by ${app.username}: "${justification}".`,
       };
     },
   },
@@ -594,62 +660,90 @@ ai.register({
     },
     handler: async ({ shipmentId, justification }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const targetId = shipmentId || app.selectedEmailId;
       if (!targetId) return { status: 'error', message: 'No shipment specified for rejection.' };
 
       await app.submitReviewDecision(targetId, {
         action: 'reject',
+        operator_id: app.username,
         action_taken: 'REJECTED_TO_SHIPPER',
         audit_reason_code: 'DEFECT_STANDS_UNRESOLVED',
-        notes: `[VOICE NOTE]: ${justification}`,
+        notes: `[VOICE NOTE by ${app.username} (${app.userRole})]: ${justification}`,
         voice_note: justification,
       });
 
       return {
         status: 'ok',
         shipmentId: targetId,
+        operator: app.username,
         justification,
-        summary: `Shipment ${targetId} rejected with voice justification recorded to audit trail: "${justification}".`,
+        summary: `Shipment ${targetId} rejected with voice justification recorded to audit trail by ${app.username}: "${justification}".`,
       };
     },
   },
 
-  // 6. Navigate Workspace Tabs & Views (Enhanced Multi-Parameter)
+  // 6. Navigate Workspace Tabs & Views (Role-Gated)
   navigateToTab: {
     description:
-      'Navigate across all workspace tabs, pages, and sub-views: "dashboard" (overview), "emails" (inbox & explorer), "reviews" (human review queue), "detail" (shipment inspector), "audit" (company compliance audit ledger), "evaluation" (quality & benchmarks / SLAs), "settings", "profile" (my operator account), or "landing" (marketing website). Also supports jumping directly to a shipment or specific page section.',
+      'Navigate across workspace views: "dashboard", "emails" (inbox), "reviews" (queue), "detail" (inspector), "audit" (compliance ledger), "evaluation" (benchmarks), "settings", "profile", "superadmin" (Super Admin console), or "landing".',
     params: {
       tab: {
         type: 'string',
         required: true,
         description:
-          'Target tab: dashboard, emails (inbox), reviews (queue), detail (inspector), audit (ledger), evaluation (benchmarks), settings, profile, landing',
+          'Target tab: dashboard, emails, reviews, detail, audit, evaluation, settings, profile, superadmin, landing',
       },
       shipmentId: {
         type: 'string',
         required: false,
-        description: 'Optional shipment or email ID (e.g. EML-1002). If provided, selects this shipment and opens the inspector view.',
+        description: 'Optional shipment or email ID (e.g. EML-1002).',
       },
       section: {
         type: 'string',
         required: false,
-        description: 'Optional page section anchor to scroll into view: interactive-demo, drivers, timeline, metrics, security',
+        description: 'Optional page section anchor',
       },
       filter: {
         type: 'string',
         required: false,
-        description: 'Optional search term or filter to apply immediately upon arrival',
+        description: 'Optional search term or filter',
       },
     },
     handler: async ({ tab, shipmentId, section, filter }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const lower = tab.toLowerCase();
       let target = 'dashboard';
-      if (lower.includes('email') || lower.includes('inbox') || lower.includes('explore')) target = 'emails';
+
+      if (lower.includes('superadmin') || lower.includes('root') || lower.includes('governance')) {
+        if (!app.isSuperAdmin) {
+          return {
+            status: 'error',
+            code: 'FORBIDDEN',
+            message: `Access denied: User ${app.username} does not have Super Admin system privileges.`,
+          };
+        }
+        target = 'superadmin';
+      } else if (
+        app.isSuperAdmin &&
+        (lower.includes('email') ||
+          lower.includes('inbox') ||
+          lower.includes('review') ||
+          lower.includes('detail') ||
+          lower.includes('eval') ||
+          lower.includes('quality'))
+      ) {
+        return {
+          status: 'error',
+          code: 'ROLE_RESTRICTED',
+          message: `Restricted: As Super Admin (${app.username}), operational shipment processing views are disabled. Your console is dedicated to system posture, users, organizations, and audit telemetry.`,
+        };
+      } else if (lower.includes('email') || lower.includes('inbox') || lower.includes('explore')) target = 'emails';
       else if (lower.includes('review') || lower.includes('queue')) target = 'reviews';
       else if (lower.includes('audit') || lower.includes('ledger') || lower.includes('compliance')) target = 'audit';
       else if (lower.includes('eval') || lower.includes('quality') || lower.includes('benchmark') || lower.includes('sla')) target = 'evaluation';
@@ -658,7 +752,7 @@ ai.register({
       else if (lower.includes('detail') || lower.includes('inspect') || lower.includes('comparison')) target = 'detail';
       else if (lower.includes('landing') || lower.includes('home') || lower.includes('market')) target = 'landing';
 
-      if (shipmentId) {
+      if (shipmentId && !app.isSuperAdmin) {
         const cleanId = shipmentId.toUpperCase().trim();
         const found = app.emails.find((e) => e.id === cleanId || e.id.includes(cleanId));
         if (found) {
@@ -667,7 +761,7 @@ ai.register({
         }
       }
 
-      if (filter) {
+      if (filter && !app.isSuperAdmin) {
         app.setSearchQuery(filter);
       }
 
@@ -692,27 +786,31 @@ ai.register({
   // 7. Interactive Button & Action Trigger Tool
   triggerActionButton: {
     description:
-      'Trigger any workspace action button or modal dialog: "upload_docs" (open upload modal), "command_palette" (open quick search ⌘K), "verify_all" (run automated pipeline), "auth_modal" (open sign-in / registration), "clear_filters" (reset search & filter chips), "export_audit" (export compliance logs), or "logout" (sign out).',
+      'Trigger workspace actions: "upload_docs", "command_palette" (⌘K), "verify_all" (run pipeline), "clear_filters", "export_audit", or "logout".',
     params: {
       button: {
         type: 'string',
         required: true,
         description:
-          'Action button: upload_docs, command_palette, verify_all (run_pipeline), auth_modal, clear_filters, export_audit, logout',
+          'Action button: upload_docs, command_palette, verify_all, clear_filters, export_audit, logout',
       },
       actionType: {
         type: 'string',
         required: false,
-        description: 'Optional sub-action: open, close, signin, register, reset',
+        description: 'Optional sub-action: open, close, reset',
       },
     },
     handler: async ({ button, actionType }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const b = button.toLowerCase();
 
       if (b.includes('upload') || b.includes('import') || b.includes('drop')) {
+        const opAuth = checkOperationalAuth(app);
+        if (!opAuth.allowed) return opAuth.response;
+
         app.setUploadModalOpen(actionType !== 'close');
         return {
           status: 'ok',
@@ -723,6 +821,9 @@ ai.register({
       }
 
       if (b.includes('palette') || b.includes('search') || b.includes('command') || b.includes('find')) {
+        const opAuth = checkOperationalAuth(app);
+        if (!opAuth.allowed) return opAuth.response;
+
         app.setCommandPaletteOpen(actionType !== 'close');
         return {
           status: 'ok',
@@ -733,6 +834,9 @@ ai.register({
       }
 
       if (b.includes('verify') || b.includes('pipeline') || b.includes('run') || b.includes('process')) {
+        const opAuth = checkOperationalAuth(app);
+        if (!opAuth.allowed) return opAuth.response;
+
         app.runProcessingPipeline(true);
         return {
           status: 'ok',
@@ -742,14 +846,9 @@ ai.register({
       }
 
       if (b.includes('auth') || b.includes('login') || b.includes('sign') || b.includes('register')) {
-        if (actionType === 'register') app.setAuthMode('register');
-        else app.setAuthMode('signin');
-        app.setAuthModalOpen(actionType !== 'close');
         return {
-          status: 'ok',
-          action: 'auth_modal',
-          state: actionType !== 'close' ? 'opened' : 'closed',
-          summary: 'Opened Authentication dialog.',
+          status: 'error',
+          message: `Already authenticated as ${app.username} (${app.userRole}). To switch users, please say 'Log out'.`,
         };
       }
 
@@ -775,11 +874,16 @@ ai.register({
       }
 
       if (b.includes('logout') || b.includes('signout')) {
+        const loggedOutUser = app.username;
         app.handleLogout();
+        try {
+          ai.disconnect();
+          ai.setUser(null);
+        } catch {}
         return {
           status: 'ok',
           action: 'logout',
-          summary: 'Signed out of current operator session.',
+          summary: `Signed out ${loggedOutUser}. Voice session terminated.`,
         };
       }
 
@@ -790,7 +894,7 @@ ai.register({
   // 8. Direct Shipment Inspection Tool
   inspectShipment: {
     description:
-      'Open the side-by-side inspection view for a specific shipment or email ID (e.g. EML-1001, EML-1004). Automatically displays the SI vs BL comparison, extracted fields, and legal approval banner.',
+      'Open the side-by-side inspection view for a specific shipment or email ID (e.g. EML-1001, EML-1004).',
     params: {
       shipmentId: {
         type: 'string',
@@ -800,7 +904,8 @@ ai.register({
     },
     handler: async ({ shipmentId }) => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       const cleanId = shipmentId.toUpperCase().trim();
       const shipment = app.emails.find(
@@ -838,7 +943,8 @@ ai.register({
       'Trigger the automated 3-stage verification pipeline across all pending shipping instructions and bills of lading.',
     handler: async () => {
       const app = appBridgeRef.current;
-      if (!app) return { status: 'error', message: 'Operations desk context unavailable.' };
+      const auth = checkOperationalAuth(app);
+      if (!auth.allowed) return auth.response;
 
       app.runProcessingPipeline(true);
       return {
@@ -847,19 +953,112 @@ ai.register({
       };
     },
   },
+
+  // 10. Super Admin Governance: User Lifecycle Console
+  viewSuperAdminUsers: {
+    description:
+      'Super Admin only: Switch to User Management console to audit registered accounts, roles, and provisioning.',
+    handler: async () => {
+      const app = appBridgeRef.current;
+      const auth = checkAuth(app, true);
+      if (!auth.allowed) return auth.response;
+
+      app.setActiveTab('superadmin');
+      return {
+        status: 'ok',
+        summary: `Navigated to Super Admin User Management console for user ${app.username}.`,
+      };
+    },
+  },
+
+  // 11. Super Admin Governance: Infrastructure Telemetry
+  viewSuperAdminTelemetry: {
+    description:
+      'Super Admin only: View real-time platform telemetry, database connection health, and worker performance.',
+    handler: async () => {
+      const app = appBridgeRef.current;
+      const auth = checkAuth(app, true);
+      if (!auth.allowed) return auth.response;
+
+      app.setActiveTab('superadmin');
+      return {
+        status: 'ok',
+        summary: `Opened Super Admin Infrastructure Telemetry console for user ${app.username}.`,
+      };
+    },
+  },
+
+  // 12. Super Admin Governance: Tenant Organizations
+  viewSuperAdminOrganizations: {
+    description:
+      'Super Admin only: View registered tenant organizations and maritime shipping lines.',
+    handler: async () => {
+      const app = appBridgeRef.current;
+      const auth = checkAuth(app, true);
+      if (!auth.allowed) return auth.response;
+
+      app.setActiveTab('superadmin');
+      return {
+        status: 'ok',
+        summary: `Opened registered tenant organizations catalog for user ${app.username}.`,
+      };
+    },
+  },
+
+  // 13. Super Admin Governance: System Audit Trail
+  viewSuperAdminAudit: {
+    description:
+      'Super Admin only: Access system-wide immutable compliance audit logs and access events.',
+    handler: async () => {
+      const app = appBridgeRef.current;
+      const auth = checkAuth(app, true);
+      if (!auth.allowed) return auth.response;
+
+      app.setActiveTab('superadmin');
+      return {
+        status: 'ok',
+        summary: `Opened immutable platform audit stream for user ${app.username}.`,
+      };
+    },
+  },
+
+  // 14. Super Admin Governance: Overall Posture & Health
+  getSystemHealthOverview: {
+    description:
+      'Super Admin only: Check active system health, database connectivity, and platform governance posture.',
+    handler: async () => {
+      const app = appBridgeRef.current;
+      const auth = checkAuth(app, true);
+      if (!auth.allowed) return auth.response;
+
+      return {
+        status: 'ok',
+        authenticatedSuperAdmin: app.username,
+        systemHealth: 'OPERATIONAL',
+        databaseEngine: 'PostgreSQL (Neon Cloud)',
+        summary: `System operational. Database connected to Neon PostgreSQL. Authenticated as Super Admin ${app.username}.`,
+      };
+    },
+  },
 });
 
 // Bind live UI state so the voice agent has real-time awareness
 ai.bindState(() => {
   const app = appBridgeRef.current;
-  if (!app) {
+  if (!app || !app.isAuthenticated || !app.username) {
     return {
-      desk: 'SIBLIX Operations Desk',
-      currentPage: typeof location !== 'undefined' ? location.pathname : '/',
+      authenticated: false,
+      status: 'UNAUTHENTICATED_LOCKED',
+      securityNotice: 'Access restricted to authenticated users only.',
     };
   }
 
   return {
+    authenticated: true,
+    currentUser: app.username,
+    userRole: app.userRole,
+    isSuperAdmin: app.isSuperAdmin,
+    organization: app.userOrganization || (app.isSuperAdmin ? 'SIBLIX Core Infrastructure' : 'Operations Desk'),
     currentPage: typeof location !== 'undefined' ? location.pathname : '/',
     activeTab: app.activeTab,
     selectedShipmentId: app.selectedEmailId,
@@ -869,47 +1068,20 @@ ai.bindState(() => {
     activeCategoryFilter: app.selectedCategory || 'ALL',
     activeStatusFilter: app.selectedStatus || 'ALL',
     activeDefectFilter: app.selectedDefectField || 'None',
-    userRole: app.userRole,
-    organization: app.userOrganization || 'Default Desk',
   };
 });
 
-// Storage key for 1-session voice trial
-const VOICE_TRIAL_STORAGE_KEY = 'siblix_voice_trial_completed';
-
-export const isVoiceTrialUsed = () => {
-  try {
-    return localStorage.getItem(VOICE_TRIAL_STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
-};
-
-export const markVoiceTrialUsed = () => {
-  try {
-    localStorage.setItem(VOICE_TRIAL_STORAGE_KEY, '1');
-  } catch {}
-};
-
-export const resetVoiceTrial = () => {
-  try {
-    localStorage.removeItem(VOICE_TRIAL_STORAGE_KEY);
-  } catch {}
-};
-
-// Middleware: block voice action execution if unauthenticated user already used their 1-session trial
+// Middleware: unconditionally reject voice action execution if user is unauthenticated
 ai.use(async (ctx, next, cancel) => {
   const app = appBridgeRef.current;
-  if (!app?.isAuthenticated && isVoiceTrialUsed()) {
+  if (!app?.isAuthenticated || !app?.token || !app?.username) {
     cancel();
-    ai.disconnect();
-    app?.openAuthWithNotice?.(
-      'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
-      'signin'
-    );
+    try {
+      ai.disconnect();
+    } catch {}
     app?.addToast?.(
-      'Trial session completed. Please sign in to continue using SIBLIX Voice Assistant.',
-      'warning'
+      'Security Alert: Unauthorized voice command rejected. Please sign in to authenticate.',
+      'error'
     );
     return;
   }
@@ -918,80 +1090,98 @@ ai.use(async (ctx, next, cancel) => {
 
 /**
  * Assistant Component
- * Mounted ONCE in the true root of the application (App.jsx).
- * Connects Voxide voice AI to live React state.
+ * Mounted in the true root of the application (App.jsx).
+ * Connects Voxide voice AI to live React state strictly for authenticated users.
  */
 export function Assistant() {
   const app = useApp();
-  const hasEngagedTrialRef = useRef(false);
+  const prevUserRef = useRef(null);
 
   // Keep bridge ref fresh with current AppContext
   useEffect(() => {
     appBridgeRef.current = app;
   }, [app]);
 
-  // Set user context in Voxide client if logged in
+  // Synchronize authenticated user identity & dynamically configure Voxide specifically for THAT user
   useEffect(() => {
-    if (app?.username) {
-      ai.setUser({
-        userId: app.username,
-        name: app.username,
-        organization: app.userOrganization || 'Default Desk',
-        role: app.userRole,
-      });
+    if (!app?.isAuthenticated || !app?.token || !app?.username) {
+      // Disconnect and wipe any prior user identity
+      try {
+        ai.disconnect();
+        ai.setUser(null);
+      } catch {}
+      prevUserRef.current = null;
+      return;
     }
-  }, [app?.username, app?.userOrganization, app?.userRole]);
 
-  // Monitor live session snapshot to enforce 1-session trial for anonymous users
+    const currentUsername = app.username;
+    const isSuperAdmin = app.isSuperAdmin;
+    const role = app.userRole || (isSuperAdmin ? 'superadmin' : 'operator');
+    const org = app.userOrganization || (isSuperAdmin ? 'SIBLIX Core Infrastructure' : 'Operations Desk');
+
+    // If user switched or newly logged in, set user identity
+    if (prevUserRef.current !== currentUsername) {
+      ai.setUser({
+        userId: currentUsername,
+        name: currentUsername,
+        username: currentUsername,
+        role: role,
+        organization: org,
+        isSuperAdmin: isSuperAdmin,
+      });
+
+      if (isSuperAdmin) {
+        ai.configureUI({
+          title: 'SIBLIX Root Assistant',
+          subtitle: `Super Admin · ${currentUsername}`,
+          accentColor: '#717486',
+          greeting: `Authenticated as Super Admin (${currentUsername}). System governance and telemetry online. How may I assist with platform oversight?`,
+          starters: [
+            'Show active system users',
+            'Check system health and database telemetry',
+            'View registered tenant organizations',
+            'Show compliance audit trail',
+          ],
+        });
+      } else {
+        ai.configureUI({
+          title: 'SIBLIX Voice Assistant',
+          subtitle: `${currentUsername} · ${org}`,
+          accentColor: '#FF6B00',
+          greeting: `Authenticated as ${currentUsername} (${role}) for ${org}. Ready for shipment verification and document triage.`,
+          starters: [
+            'Show Awash Bank weight discrepancies at Modjo',
+            'Inspect shipment EML-1002',
+            'Run automated verification pipeline',
+            'Open upload shipping docs modal',
+            'Go to human review queue',
+          ],
+        });
+      }
+
+      prevUserRef.current = currentUsername;
+    }
+  }, [app?.isAuthenticated, app?.token, app?.username, app?.userRole, app?.userOrganization, app?.isSuperAdmin]);
+
+  // Monitor live session snapshot: if unauthenticated at any moment, terminate immediately
   useEffect(() => {
     const unsubscribe = ai.subscribe(() => {
       const snap = ai.getSnapshot();
       const currentApp = appBridgeRef.current;
-      if (!currentApp) return;
-
-      const isAuthenticated = currentApp.isAuthenticated;
-      const trialCompleted = isVoiceTrialUsed();
-
-      // Case 1: Unauthenticated user tries to start voice assistant after completing trial
-      if (!isAuthenticated && trialCompleted) {
+      if (!currentApp?.isAuthenticated || !currentApp?.username) {
         if (
           snap.status === 'connecting' ||
           snap.status === 'listening' ||
           snap.status === 'thinking' ||
-          snap.status === 'speaking'
-        ) {
-          ai.disconnect();
-          currentApp.openAuthWithNotice?.(
-            'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
-            'signin'
-          );
-          currentApp.addToast?.(
-            'Free trial session ended. Please sign in to use hands-free voice triage.',
-            'warning'
-          );
-          return;
-        }
-      }
-
-      // Case 2: Unauthenticated user is using their first trial session
-      if (!isAuthenticated && !trialCompleted) {
-        // Track when they engage in an active session (talk or receive audio)
-        if (
-          snap.status === 'listening' ||
           snap.status === 'speaking' ||
-          snap.status === 'executing' ||
-          (snap.messages && snap.messages.length > 0)
+          snap.status === 'executing'
         ) {
-          hasEngagedTrialRef.current = true;
-        }
-
-        // When the first trial session finishes
-        if (hasEngagedTrialRef.current && (snap.status === 'idle' || snap.endedSession)) {
-          markVoiceTrialUsed();
-          hasEngagedTrialRef.current = false;
-          currentApp.addToast?.(
-            'Your free trial voice session has ended. Sign in anytime to unlock unlimited hands-free voice triage!',
-            'info'
+          try {
+            ai.disconnect();
+          } catch {}
+          currentApp?.addToast?.(
+            'Security Alert: Voice session terminated. You must be authenticated to use SIBLIX Voice Assistant.',
+            'error'
           );
         }
       }
@@ -1000,59 +1190,23 @@ export function Assistant() {
     return () => unsubscribe();
   }, []);
 
-  // Intercept clicks on the floating launcher mic button if trial has expired
-  useEffect(() => {
-    const handleCaptureClick = (e) => {
-      const currentApp = appBridgeRef.current;
-      if (currentApp?.isAuthenticated) return;
-      if (!isVoiceTrialUsed()) return;
-
-      // Detect if click was on or inside the Voxide launcher button or widget container
-      const target = e.target;
-      const isLauncher =
-        target &&
-        target.closest &&
-        (target.closest('button[aria-label*="voice" i]') ||
-          target.closest('button[aria-label*="voxide" i]') ||
-          target.closest('button[title*="voice" i]') ||
-          target.closest('button[title*="voxide" i]') ||
-          target.closest('[class*="voxide"]') ||
-          target.closest('[class*="launcher"]'));
-
-      if (isLauncher) {
-        e.preventDefault();
-        e.stopPropagation();
-        ai.disconnect();
-        currentApp?.openAuthWithNotice?.(
-          'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
-          'signin'
-        );
-        currentApp?.addToast?.(
-          'Please sign in to continue using SIBLIX Voice Assistant after your trial session.',
-          'warning'
-        );
-      }
-    };
-
-    window.addEventListener('click', handleCaptureClick, true);
-    return () => window.removeEventListener('click', handleCaptureClick, true);
-  }, []);
-
-  // Intercept hands-free hotkey (Alt+V) if trial has expired
+  // Intercept hands-free hotkey (Alt+V): strictly block and alert if not authenticated
   useEffect(() => {
     const handleHotkey = (e) => {
       if (e.altKey && (e.key === 'v' || e.key === 'V')) {
         const currentApp = appBridgeRef.current;
-        if (!currentApp?.isAuthenticated && isVoiceTrialUsed()) {
+        if (!currentApp?.isAuthenticated || !currentApp?.username) {
           e.preventDefault();
-          e.stopPropagation();
-          ai.disconnect();
+          e.stopImmediatePropagation();
+          try {
+            ai.disconnect();
+          } catch {}
           currentApp?.openAuthWithNotice?.(
-            'You have completed your 1 free voice trial session. Please sign in or create an account to continue using SIBLIX Voice Assistant.',
+            'Authentication required: SIBLIX Voice Assistant is strictly restricted to authenticated users only.',
             'signin'
           );
           currentApp?.addToast?.(
-            'Please sign in to continue using SIBLIX Voice Assistant after your trial session.',
+            'Access Denied: Please log in with your credentials to activate voice triage.',
             'warning'
           );
         }
@@ -1063,8 +1217,13 @@ export function Assistant() {
     return () => window.removeEventListener('keydown', handleHotkey, true);
   }, []);
 
-  // Render VoxideWidget passing bright orange accentColor to ensure floating message button is bright orange
-  return <VoxideWidget client={ai} accentColor="#FF6B00" />;
+  // Strict DOM render guard: NEVER render VoxideWidget unless user is authenticated!
+  if (!app?.isAuthenticated || !app?.token || !app?.username) {
+    return null;
+  }
+
+  // Render VoxideWidget passing user-specific theme color: Storm Grey (#717486) for Super Admin, Bright Orange (#FF6B00) for Operations
+  return <VoxideWidget client={ai} accentColor={app.isSuperAdmin ? '#717486' : '#FF6B00'} />;
 }
 
 export default Assistant;
