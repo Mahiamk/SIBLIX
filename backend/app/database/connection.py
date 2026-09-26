@@ -16,6 +16,22 @@ from sqlmodel import SQLModel, Session, create_engine, select
 _default_db = "sqlite:////tmp/app.db" if os.environ.get("VERCEL") else "sqlite:///./storage/app.db"
 DATABASE_URL = os.environ.get("DATABASE_URL", _default_db)
 
+# Normalize postgres:// to postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Auto-detect driver: if psycopg2 is not available, use modern psycopg (v3)
+if DATABASE_URL.startswith("postgresql+psycopg2://"):
+    try:
+        import psycopg2  # noqa: F401
+    except ImportError:
+        DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    try:
+        import psycopg2  # noqa: F401
+    except ImportError:
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
 _connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 10}
 
 engine = create_engine(
