@@ -8,6 +8,7 @@
  * - In-memory cached replay (<2ms)
  * - Instant stop / pause controls
  */
+import { API_BASE } from '../services/api';
 
 let currentAudio = null;
 let currentAbortController = null;
@@ -76,7 +77,7 @@ export async function playAudioBriefing(email, onStart, onEnd) {
   try {
     if (onStart) onStart();
 
-    const response = await fetch('/documents/briefing-audio', {
+    const response = await fetch(`${API_BASE}/documents/briefing-audio`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

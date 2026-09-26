@@ -28,7 +28,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    proxy: Object.fromEntries(API_PREFIXES.map((p) => [p, BACKEND])),
+    proxy: {
+      '/api': {
+        target: BACKEND,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/docs': { target: BACKEND, changeOrigin: true },
+      '/redoc': { target: BACKEND, changeOrigin: true },
+      '/openapi.json': { target: BACKEND, changeOrigin: true },
+      ...Object.fromEntries(API_PREFIXES.map((p) => [p, BACKEND])),
+    },
   },
 });
 // Storm theme reload trigger

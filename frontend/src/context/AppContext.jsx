@@ -37,20 +37,62 @@ export function AppProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // App navigation
-  // Where the user was, remembered across reloads. Without this a refresh
-  // dropped everyone back on the marketing page, which reads as being
-  // logged out even though the session is still valid.
-  const [activeTab, setActiveTab] = useState(() => {
-    try { return localStorage.getItem('sdoc_tab') || 'landing'; } catch { return 'landing'; }
-  });
+  // App navigation — synchronized with browser URL path and history
+  const VALID_TABS = ['dashboard', 'emails', 'detail', 'reviews', 'evaluation', 'settings', 'profile', 'audit'];
+
+  function getInitialTab() {
+    if (typeof window !== 'undefined') {
+      const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (rawPath === 'dashboard') return 'dashboard';
+      if (rawPath === 'emails' || rawPath === 'inbox') return 'emails';
+      if (rawPath === 'reviews') return 'reviews';
+      if (rawPath === 'evaluation' || rawPath === 'benchmark') return 'evaluation';
+      if (rawPath === 'settings') return 'settings';
+      if (rawPath === 'profile') return 'profile';
+      if (rawPath === 'audit') return 'audit';
+      if (rawPath === 'detail') return 'detail';
+    }
+    try {
+      return localStorage.getItem('sdoc_tab') || 'landing';
+    } catch {
+      return 'landing';
+    }
+  }
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [selectedEmailId, setSelectedEmailId] = useState(() => {
     try { return localStorage.getItem('sdoc_email') || 'EML-1001'; } catch { return 'EML-1001'; }
   });
 
   useEffect(() => {
     try { localStorage.setItem('sdoc_tab', activeTab); } catch {}
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      const targetPath = activeTab === 'landing' ? '/' : `/${activeTab}`;
+      const targetClean = targetPath.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (currentPath !== targetClean) {
+        window.history.pushState({ tab: activeTab }, '', targetPath);
+      }
+    }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (!path) {
+        setActiveTab('landing');
+      } else if (path === 'inbox') {
+        setActiveTab('emails');
+      } else if (path === 'benchmark') {
+        setActiveTab('evaluation');
+      } else if (VALID_TABS.includes(path)) {
+        setActiveTab(path);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     try { localStorage.setItem('sdoc_email', selectedEmailId); } catch {}

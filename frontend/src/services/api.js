@@ -1,8 +1,15 @@
 import { FIELDS, dbKey, REASONS } from '../constants/taxonomy';
 
-const API_BASE = (typeof window !== 'undefined' && window.API_BASE_URL)
-  ? window.API_BASE_URL
-  : (import.meta.env.VITE_API_BASE_URL || '');
+const getApiBase = () => {
+  let base = (typeof window !== 'undefined' && window.API_BASE_URL)
+    ? window.API_BASE_URL
+    : (import.meta.env.VITE_API_BASE_URL || '');
+  if (base.endsWith('/')) base = base.slice(0, -1);
+  if (!base) return '/api';
+  return base.endsWith('/api') ? base : `${base}/api`;
+};
+
+export const API_BASE = getApiBase();
 
 export async function apiLogin(username, password) {
   const res = await fetch(`${API_BASE}/auth/login`, {

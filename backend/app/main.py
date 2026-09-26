@@ -36,6 +36,56 @@ def health():
     return {"status": "ok", "tenant_isolation": "enabled"}
 
 
+@app.get("/")
+@app.get("/api")
+def api_root():
+    return {
+        "platform": "SIBLIX AI",
+        "description": "Intelligent Shipping Document (SI vs BL) Verification Engine",
+        "version": "1.0.0",
+        "status": "online",
+        "documentation": {
+            "swagger_ui": "/docs",
+            "redoc": "/redoc",
+            "openapi_spec": "/openapi.json"
+        },
+        "endpoints": {
+            "health": "GET /health",
+            "auth": {
+                "register": "POST /auth/register",
+                "login": "POST /auth/login",
+                "me": "GET /auth/me",
+                "logout": "POST /auth/logout"
+            },
+            "dashboard": "GET /dashboard",
+            "emails": {
+                "list": "GET /emails",
+                "full": "GET /emails/full",
+                "pipeline_status": "GET /emails/pipeline-status",
+                "process_all": "POST /emails/process-all",
+                "single": "GET /emails/{email_id}",
+                "process_single": "POST /emails/{email_id}/process"
+            },
+            "documents": "GET /documents/{email_id}",
+            "comparison": "GET /comparison/{email_id}",
+            "reviews": {
+                "queue": "GET /reviews",
+                "submit": "POST /reviews/{email_id}",
+                "history": "GET /reviews/{email_id}/history"
+            },
+            "evaluation": {
+                "generate": "POST /evaluation/generate",
+                "submit": "POST /evaluation/submit",
+                "submission": "GET /evaluation/submission"
+            },
+            "shipments": "GET /shipments",
+            "audit": "GET /audit",
+            "email_accounts": "GET /email-accounts",
+            "profile": "GET /profile"
+        }
+    }
+
+
 app.include_router(auth.router)
 app.include_router(emails.router)
 app.include_router(documents.router)

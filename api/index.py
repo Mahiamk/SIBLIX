@@ -31,6 +31,9 @@ from app.main import app
 # Strip /api prefix if the request arrived through /api/... routing
 @app.middleware("http")
 async def handle_api_prefix(request, call_next):
-    if request.scope.get("path", "").startswith("/api/"):
-        request.scope["path"] = request.scope["path"][4:]
+    path = request.scope.get("path", "")
+    if path == "/api":
+        request.scope["path"] = "/"
+    elif path.startswith("/api/"):
+        request.scope["path"] = path[4:]
     return await call_next(request)
