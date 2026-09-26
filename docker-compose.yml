@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sdoc
+      POSTGRES_PASSWORD: sdoc
+      POSTGRES_DB: sdoc
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sdoc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://sdoc:sdoc@postgres:5432/sdoc
+      # Accounts live in the users table — register via POST /auth/register.
+      # Set AUTH_SECRET to a unique value; it signs session tokens.
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-to-a-long-random-string}
+      AUTH_TOKEN_TTL: ${AUTH_TOKEN_TTL:-43200}
+      DISABLE_AUTH: "0"
+      STORAGE_ROOT: /app/storage
+      # Optional — leave blank to run fully deterministic/offline:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      # Base URL of the organizers' scoring server, if/when available:
+      EVAL_SERVER_URL: ${EVAL_SERVER_URL:-http://eval-server:8000}
+    volumes:
+      - ./backend/storage:/app/storage
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:

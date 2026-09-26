@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-lexend: 'Lexend', system-ui, -apple-system, sans-serif;
+  }
+  
+  html, body {
+    font-family: var(--font-lexend);
+    background-color: #F8F9FA;
+    color: #0F172A;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom subtle scrollbar (Luma style) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Luma subtle card and pill effects */
+.luma-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 4px 16px -4px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luma-card:hover {
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.07);
+}
+
+.luma-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Glow animations */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Voxide floating message button - Bright Orange styling */
+.vx-enter button[type="button"]:not([aria-label*="Close"]):not([aria-label*="End"]) {
+  background-color: #FF6B00 !important;
+  box-shadow: 0 10px 25px -4px rgba(255, 107, 0, 0.45), 0 4px 12px -2px rgba(255, 107, 0, 0.3) !important;
+}
+
+.vx-enter button[type="button"]:hover {
+  background-color: #FF7700 !important;
+  box-shadow: 0 12px 28px -4px rgba(255, 107, 0, 0.55), 0 6px 14px -2px rgba(255, 107, 0, 0.35) !important;
+}
+
+/* Tempest Monolith - Violent Storm Monochromatic System */
+:root {
+  --storm-thunderhead: #171B24;
+  --storm-squall: #323B4A;
+  --storm-obsidian: #0F1218;
+  --storm-wash: #F0F4F8;
+  --storm-halo: #CBD7E5;
+}
+
+.btn-storm-primary {
+  background: linear-gradient(180deg, #171B24 0%, #0F1218 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(15, 18, 24, 0.4) !important;
+  box-shadow: 0 1px 3px 0 rgba(7, 8, 11, 0.25), 0 1px 2px -1px rgba(7, 8, 11, 0.15) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-storm-primary:hover {
+  background: linear-gradient(180deg, #323B4A 0%, #171B24 100%) !important;
+  box-shadow: 0 4px 14px -2px rgba(7, 8, 11, 0.35) !important;
+}
+
+.btn-storm-primary:active {
+  background: #07080B !important;
+}
+
+/* SIBLIX Brand Logo Accent (#717486) */
+.siblix-logo-badge {
+  background: linear-gradient(135deg, #717486 0%, #5A5D6E 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 10px -2px rgba(113, 116, 134, 0.45) !important;
+}
+
+.siblix-logo-badge:hover {
+  background: linear-gradient(135deg, #818498 0%, #66697A 100%) !important;
+}
+
+.siblix-logo-text {
+  color: #717486 !important;
+}
+

@@ -1,0 +1,18 @@
+BILL OF LADING (DRAFT)
+========================================
+
+Shipper (Principal or Seller): APRIL FINE PAPER TRADING (MIDDLE EAST) FZE
+  #813, 4 EA, DUBAI AIRPORT FREE ZONE; P.O. BOX: 293775, DUBAI, UNITED ARAB EMIRATES
+CONSIGNEE: CLIFFORD PAPER INC
+  70 EAST STREET; RIDGEFIELD, NJ 07657, USA
+Notify: CLIFFORD PAPER INC
+Port of Loading (POL): BUATAN, INDONESIA (IDBUA)
+Port of Discharge (POD): NEW YORK, US (USNYC)
+No. of Containers or Packages: 15 x 40'HC
+Gross Weight (KG): 334,605 KG
+Vessel Name: PACIFIC SUN 1 V.251073E
+Voy. No: 051NW1
+Kinds of Packages; Description of Goods: PAPERBOARD
+B/L NUMBER: HLCUSIN267055143
+Booking Ref: 77693663
+Freight: PREPAID

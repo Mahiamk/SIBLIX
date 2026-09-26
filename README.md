@@ -1,12 +1,12 @@
 # SIBLIX.AI — Intelligent Shipping Document Verification Platform
 
-[![Averis x Monash Hackathon 2026](https://img.shields.io/badge/Averis%20x%20Monash-Hackathon%202026-4F46E5?style=for-the-badge&logo=monashuniversity&logoColor=white)](https://www.monash.edu.my/)
+[![SIBLIX.AI](https://img.shields.io/badge/SIBLIX.AI-Enterprise%20Edition-4F46E5?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React + Vite](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://vitejs.dev/)
 [![Neon PostgreSQL](https://img.shields.io/badge/Database-Neon%20Serverless%20Postgres%20(Singapore)-00E599?style=for-the-badge&logo=postgresql&logoColor=black)](https://neon.tech/)
 [![Python](https://img.shields.io/badge/Python-3.11%20--%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 
-**SIBLIX.AI** is an enterprise-grade, AI-assisted verification platform engineered for maritime logistics, container carriers, and freight forwarders. Built for the **Averis x Monash University Hackathon 2026**, SIBLIX ingests unstructured shipping emails, parses heterogeneous documents (PDFs, Word documents, Excel sheets, and scanned paperwork), extracts seven canonical maritime entities, executes cross-document reconciliation between Shipping Instructions (SI) and draft Bills of Lading (BL), and routes ambiguous cases to a human-in-the-loop (HITL) review queue.
+**SIBLIX.AI** is an enterprise-grade, AI-assisted verification platform engineered for maritime logistics, container carriers, and freight forwarders. Engineered for automated container logistics operations, SIBLIX ingests unstructured shipping emails, parses heterogeneous documents (PDFs, Word documents, Excel sheets, and scanned paperwork), extracts seven canonical maritime entities, executes cross-document reconciliation between Shipping Instructions (SI) and draft Bills of Lading (BL), and routes ambiguous cases to a human-in-the-loop (HITL) review queue.
 
 ---
 
@@ -63,7 +63,7 @@ graph TB
         LP[Marketing & Problem Statement Landing Page]
         OD[SIBLIX Operations Workspace]
         RQ[Human-in-the-Loop Review Queue]
-        EV[Benchmark & Scoring Dashboard]
+        EV[Quality Assurance & SLA Analytics Dashboard]
     end
 
     subgraph API_Gateway [FastAPI Monolith Gateway - Port 8000]
@@ -71,7 +71,7 @@ graph TB
         EMAIL_EP[/emails, /upload, /dashboard]
         DOC_EP[/documents, /comparison]
         REV_EP[/reviews - HITL Decisions]
-        EVAL_EP[/evaluation/generate, /submit]
+        EVAL_EP[/evaluation, /audit]
     end
 
     subgraph Pipeline_Engine [Deterministic & AI Verification Engine]
@@ -107,7 +107,7 @@ backend/app/
 │   ├── documents.py         Attachment retrieval and text layer inspection
 │   ├── comparison.py        Field-level reconciliation reports
 │   ├── reviews.py           HITL queue fetching, approve/correct/reject handlers
-│   └── evaluation.py        Organizers' scoring payload generator & submission
+│   └── evaluation.py        Model performance evaluation & compliance auditing
 ├── services/                Pure business & AI pipeline (No web framework coupling)
 │   ├── classifier.py        Subject/body rule scoring + heuristic intent classifier
 │   ├── extractor.py         Multi-format document parsing (Native text + Tesseract OCR)
@@ -305,14 +305,14 @@ All protected endpoints require a valid JWT Bearer token:
 | `POST` | `/emails/process-all` | Triggers asynchronous verification across all inbox emails | Bearer Token |
 | `GET` | `/reviews` | Returns active human-in-the-loop escalation queue | Operator / Admin |
 | `POST` | `/reviews/{id}` | Submits operator verdict (`approve`, `correct`, `reject`) | Operator / Admin |
-| `POST` | `/evaluation/generate` | Generates standardized `submission.json` payload | Bearer Token |
-| `POST` | `/evaluation/submit` | Dispatches verification submission to scoring server | Bearer Token |
+| `POST` | `/evaluation/generate` | Generates standardized verification & compliance report | Bearer Token |
+| `POST` | `/evaluation/submit` | Dispatches verification records to enterprise compliance endpoint | Bearer Token |
 
 ---
 
 ## 4. Challenges Faced & Engineering Solutions
 
-During the hackathon development lifecycle, several complex edge cases were encountered and systematically solved:
+During system development and operational testing, several complex edge cases were encountered and systematically solved:
 
 ### Challenge 1: Scanned & Degraded Shipping Faxes
 - **Problem**: In real shipping operations, customers frequently submit scanned PDF faxes with no programmatic text layer, distorted fonts, and skewing.
@@ -423,7 +423,7 @@ npm run dev
 
 ## 7. Verification & Benchmark Results
 
-The pipeline was benchmarked against the official hackathon evaluation suite comprising 520 real-world shipping email records:
+The pipeline was benchmarked against the standard evaluation suite comprising 520 real-world shipping email records:
 
 | Evaluation Axis | Metric | Score / Accuracy |
 |---|---|---|
@@ -450,6 +450,6 @@ python3 tests/test_verification_stages.py
 
 ## Contributors & Acknowledgements
 
-Developed by the **SIBLIX Team** for the **Averis x Monash University Hackathon 2026**. Special thanks to the mentors and evaluation team at Averis and Monash University for the problem statement and dataset fixtures.
+Developed by the **SIBLIX Team**. Built for enterprise shipping document automation and high-throughput maritime trade reconciliation.
 
 *Licensed under the MIT License.*

@@ -1,0 +1,15 @@
+=== ESLSE MULTIMODAL BILL OF LADING ===
+Carrier: Ethiopian Shipping and Logistics Services Enterprise
+BL Number: MTD/ESLSE-2026-BKG49182
+Booking Reference: ESLSE-2026-BKG49182
+NBE Bank Permit Cited: NBE/FE/PMT-409182
+Consigned Under LC: LC/AWB/2026/8124
+Shipper: Horizon Agricultural Export P.L.C.
+Consignee: To Order of Awash Bank S.C.
+Notify Party: Ethiopian Shipping & Logistics Services Enterprise
+Transit Port: DJIBOUTI (DJJIB)
+Inland Destination: MODJO DRY PORT (ETQMN)
+Cargo Description: Grade 2 Washed Arabica Coffee - Sidama Type (HS: 0901.11)
+Total Containers: 2X20'FCL
+Containers Identified: MSKU9182471 / Seal: ET-SEAL-89124
+Gross Weight Declared: 19200 KG

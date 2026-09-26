@@ -1,0 +1,17 @@
+COMMERCIAL INVOICE
+========================================
+
+Invoice No.: 5250078266
+Invoice Date: 16-JAN-2026
+Seller: APRIL FINE PAPER TRADING (MIDDLE EAST) FZE
+Buyer: KPP-ANTALIS (SINGAPORE) PTE. LTD.
+Booking Ref: I009004365
+
+Description                         Qty        Unit Price       Amount (USD)
+UNCOATED WOODFREE PAPER IN R       500     45.00           22,500
+
+Total Amount: USD 22,500.00
+Payment Terms: 30 days from B/L date
+Incoterms: CFR
+
+*** THIS IS A COMMERCIAL INVOICE - NOT A SHIPPING INSTRUCTION ***

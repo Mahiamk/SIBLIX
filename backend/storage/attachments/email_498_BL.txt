@@ -1,0 +1,18 @@
+BILL OF LADING (DRAFT)
+========================================
+
+Shipper: APRIL FINE PAPER TRADING
+  ON BEHALF OF VITAL SOLUTIONS PTE LTD; 77 ROBINSON ROAD, #21-01; SINGAPORE 068896
+To the Order of: UAB NOVAKOPA
+  SAVANORIU PR. 187; LT-02300 VILNIUS, LITHUANIA
+Notify Party/Intermediate Consignee: UAB NOVAKOPA
+PORT OF LOADING: NANTONG, CHINA (CNNTG)
+Port of Discharge: HOCHIMINH CITY, VIETNAM (VNSGN)
+No. of Containers: 12 x 20'GP
+Gross Wt (kgs): 268,980 KG
+Vessel: MARCOPOLO 810 V.BS005
+Voyage: BS012
+Kinds of Packages; Description of Goods: FUJITO PAPERONE INKJET PAPER
+Bill of Lading No.: MEDUUD616324
+Booking No.: MSDUL0942588899
+Freight: PREPAID

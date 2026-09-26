@@ -1,0 +1,19 @@
+SHIPPING INSTRUCTION
+========================================
+
+Shipper/Exporter: APRIL FINE PAPER TRADING
+  ON BEHALF OF VITAL SOLUTIONS PTE LTD; 77 ROBINSON ROAD, #21-01; SINGAPORE 068896
+To the Order of: CLIFFORD PAPER INC
+  70 EAST STREET; RIDGEFIELD, NJ 07657, USA
+Notify: CLIFFORD PAPER INC
+Load Port: SINGAPORE (SGSIN)
+Discharge Port: MERSIN, TURKEY (TRMER)
+No. of Containers: 4 x 40'HC
+Gross Wt (kgs): 81,512 KG
+Ocean Vessel: MARCOPOLO 810 V.BS005
+Voyage No.: BS291
+Kinds of Packages; Description of Goods: COATED IVORY BOARD
+HS Code: 48105900
+Booking No.: I866912517
+OC No.: 5RVN-78528
+Freight: PREPAID

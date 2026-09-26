@@ -1,0 +1,18 @@
+BILL OF LADING (DRAFT)
+========================================
+
+Shipper (Principal or Seller): APRIL FAR EAST (M) SDN BHD
+  TOWER 2, AVENUE 5, LEVEL 6; BANGSAR SOUTH CITY, NO. 8 JALAN KERINCHI; 59200 KUALA LUMPUR, MALAYSIA
+Consignee (Non-Negotiable): SAFQA LIMITED
+  P.O. BOX 99423-80100; TONONOKA ROAD; MOMBASA, KENYA; PIN NO.: P051376597X
+Notify Party: SAFQA LIMITED
+Port of Loading: NHAVA SHEVA, INDIA (INNSA)
+Port of Discharge (POD): CALLAO, PERU (PECLL)
+No. of Containers: 3 x 40'HC
+Gross Wt (kgs): 61,026 KG
+Export Carrier (vessel, voyage): LE HAVRE V.QI540A
+Voy. No: 051NW1
+Description: ASIA SYMBOL FOOD SERVICE BOARD (CUPSTOCK/HI-BULK) - ALLINONE
+BL No.: YMJAI868058911
+Booking Ref: I352909656
+Freight: PREPAID

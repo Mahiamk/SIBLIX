@@ -1,0 +1,11 @@
+{
+    "email_id": "email_004",
+    "from": "operations@eslse.et",
+    "subject": "ESLSE Verification Request - ESLSE-2026-BKG49182 - Horizon Agri Export PLC",
+    "body": "Dear ESLSE Operations Desk,\n\nPlease verify attached draft Multimodal B/L against our SI for booking ESLSE-2026-BKG49182.\nLC Reference: LC/AWB/2026/8124\nNBE Import/Export Permit: NBE/FE/PMT-409182.",
+    "attachments": [
+        "attachments/email_004_SI.txt",
+        "attachments/email_004_BL.txt",
+        "attachments/email_004_CoO.txt"
+    ]
+}

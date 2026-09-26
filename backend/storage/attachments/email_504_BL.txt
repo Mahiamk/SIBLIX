@@ -1,0 +1,15 @@
+PACKING LIST
+========================================
+
+Shipper: ASIA PACIFIC PAPERBOARD TRADING PTE LTD
+Consignee: PACIFIC OFFICE (M) SDN BHD
+Booking Ref: MCLSINJEA2558631
+Commodity: PAPERBOARD
+
+Carton No.      Net Wt (kg)     Gross Wt (kg)     Dimensions
+CTN-001          532             623             120x100x110
+CTN-002          505             521             120x100x110
+CTN-003          467             603             120x100x110
+CTN-004          508             621             120x100x110
+
+*** PACKING LIST ONLY - NO PORT OR VESSEL DETAILS ***

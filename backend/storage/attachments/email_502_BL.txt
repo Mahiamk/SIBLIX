@@ -1,0 +1,12 @@
+PACKING LIST
+========================================
+
+Shipper: ASIA PACIFIC PAPERBOARD TRADING PTE LTD
+Consignee: ROXCEL TRADING GMBH
+Booking Ref: MCLSINJEA2508070
+Commodity: PAPERONE DIGITAL COPIER PAPER
+
+Carton No.      Net Wt (kg)     Gross Wt (kg)     Dimensions
+CTN-001          571             635             120x100x110
+
+*** PACKING LIST ONLY - NO PORT OR VESSEL DETAILS ***
