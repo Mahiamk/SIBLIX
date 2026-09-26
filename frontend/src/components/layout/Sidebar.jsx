@@ -250,19 +250,21 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             {showLabels && <span>Website</span>}
           </button>
 
-          {/* Interactive API Docs (Swagger UI) */}
-          <a
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Open interactive API Documentation (Swagger UI)"
-            className={`w-full flex items-center rounded-xl text-xs text-slate-500 hover:text-brand-600 hover:bg-brand-50/80 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-              collapsed && !mobileOpen ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
-            }`}
-          >
-            <PhosphorIcon name="Code" size={15} weight="duotone" />
-            {showLabels && <span>API Docs (Swagger)</span>}
-          </a>
+          {/* Interactive API Docs (Swagger UI) - SuperAdmin Only */}
+          {isSuperAdmin && (
+            <a
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open interactive API Documentation (Swagger UI)"
+              className={`w-full flex items-center rounded-xl text-xs text-slate-500 hover:text-brand-600 hover:bg-brand-50/80 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
+                collapsed && !mobileOpen ? 'justify-center h-10 px-0' : 'gap-2.5 px-3 py-2'
+              }`}
+            >
+              <PhosphorIcon name="Code" size={15} weight="duotone" />
+              {showLabels && <span>API Docs (Swagger)</span>}
+            </a>
+          )}
 
           {/* Live connection status */}
           <div
