@@ -409,7 +409,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const handleExpired = () => {
       clearSession();
-      setActiveTab('dashboard');
+      setActiveTab('landing');
       addToast('Your session has expired. Please sign in again to access your dashboard.', 'warning');
     };
     window.addEventListener('auth:session_expired', handleExpired);
@@ -461,8 +461,8 @@ export function AppProvider({ children }) {
   const handleLogout = async () => {
     const curToken = token;
     clearSession();
-    setActiveTab('dashboard');
-    addToast('Logged out. Your session has expired — please sign in again to access your dashboard.', 'info');
+    setActiveTab('landing');
+    addToast('Logged out successfully. Please sign in to access your dashboard.', 'info');
     if (curToken) {
       try {
         await apiLogout(curToken);
