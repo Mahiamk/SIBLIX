@@ -21,7 +21,7 @@ const TAB_TITLES = {
 /**
  * Workspace header.
  *
- * For Super Admin (Platform Owner):
+ * For Super Admin:
  * Strips away all operational document processing tools (Upload, Verify All, Shipment search).
  * Displays platform governance context, Neon cloud connection status, and API documentation portal.
  *
@@ -60,14 +60,14 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
             {TAB_TITLES[activeTab] || (isSuperAdmin ? 'Platform Command Center' : 'Dashboard')}
           </h1>
           {isSuperAdmin && (
-            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono bg-purple-100 text-purple-700 border border-purple-200">
-              OWNER / ROOT
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold font-mono bg-[#717486]/10 text-[#717486] border border-[#717486]/30">
+              SUPER ADMIN
             </span>
           )}
         </div>
 
         {isSuperAdmin ? (
-          /* SUPER ADMIN CONTROLS: Platform Oversight Only — No Shipment Processing */
+          /* SUPER ADMIN CONTROLS: System Oversight Only — No Shipment Processing */
           <div className="ml-auto flex items-center gap-3">
             {/* Neon Database Live Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-slate-50/70 text-slate-600 text-xs">
@@ -80,7 +80,7 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
               href="/docs"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 text-purple-700 text-xs font-semibold transition-colors shadow-subtle"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#717486]/30 bg-[#717486]/10 hover:bg-[#717486]/20 text-[#717486] text-xs font-semibold transition-colors shadow-subtle"
               title="Open SIBLIX FastAPI Swagger Documentation"
             >
               <PhosphorIcon name="Terminal" size={14} weight="bold" />

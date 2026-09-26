@@ -102,13 +102,13 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
         <div className={`h-16 flex items-center shrink-0 border-b border-slate-100 ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
           <button
             onClick={() => go(isSuperAdmin ? 'superadmin' : 'dashboard')}
-            title={isSuperAdmin ? 'SIBLIX Global — Platform Owner' : 'SIBLIX.AI — Operations Desk'}
+            title={isSuperAdmin ? 'SIBLIX Global — Super Admin' : 'SIBLIX.AI — Operations Desk'}
             className="flex items-center gap-2.5 min-w-0 group select-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           >
             <div className={`w-9 h-9 shrink-0 rounded-xl text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${
-              isSuperAdmin ? 'bg-purple-600 shadow-purple-600/20' : 'siblix-logo-badge'
+              isSuperAdmin ? 'bg-[#717486] shadow-[#717486]/20' : 'siblix-logo-badge'
             }`}>
-              <PhosphorIcon name={isSuperAdmin ? 'Crown' : 'Boat'} size={20} weight="duotone" />
+              <PhosphorIcon name={isSuperAdmin ? 'ShieldCheck' : 'Boat'} size={20} weight="duotone" />
             </div>
             {showLabels && (
               <span className="flex flex-col min-w-0 text-left">
@@ -118,14 +118,14 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                   </span>
                   <span className={`text-xs font-mono font-semibold px-1.5 py-0.5 rounded border ${
                     isSuperAdmin
-                      ? 'bg-purple-100 text-purple-700 border-purple-200'
+                      ? 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
                       : 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
                   }`}>
                     {isSuperAdmin ? 'ROOT' : 'AI'}
                   </span>
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium tracking-wide truncate">
-                  {isSuperAdmin ? 'Platform Owner' : 'Operations Desk'}
+                  {isSuperAdmin ? 'Super Admin' : 'Operations Desk'}
                 </span>
               </span>
             )}
@@ -202,26 +202,26 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                   collapsed ? 'justify-center h-11 px-0' : 'gap-3 px-3 py-2.5'
                 } ${
                   isActive
-                    ? (isSuperAdmin ? 'bg-purple-50 text-purple-700 font-semibold' : 'bg-brand-50 text-brand-700 font-semibold')
+                    ? (isSuperAdmin ? 'bg-[#717486]/10 text-[#717486] font-semibold' : 'bg-brand-50 text-brand-700 font-semibold')
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
                 }`}
               >
                 {isActive && (
                   <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full ${
-                    isSuperAdmin ? 'bg-purple-600' : 'bg-brand-600'
+                    isSuperAdmin ? 'bg-[#717486]' : 'bg-brand-600'
                   }`} />
                 )}
                 <PhosphorIcon
                   name={item.icon}
                   size={19}
                   weight="duotone"
-                  color={isActive ? (isSuperAdmin ? '#9333ea' : '#4F46E5') : 'currentColor'}
+                  color={isActive ? (isSuperAdmin ? '#717486' : '#4F46E5') : 'currentColor'}
                 />
                 {showLabels && <span className="truncate">{item.label}</span>}
                 {item.badge ? (
                   <span
                     className={`font-mono font-bold ${
-                      isSuperAdmin ? 'bg-purple-600 text-white' : 'bg-coral-500 text-white'
+                      isSuperAdmin ? 'bg-[#717486] text-white' : 'bg-coral-500 text-white'
                     } ${
                       collapsed
                         ? 'absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 text-[9px] rounded-full flex items-center justify-center'
@@ -271,7 +271,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
               collapsed ? 'justify-center h-10 px-0' : 'gap-2 px-3 py-2'
             } ${
               isSuperAdmin
-                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                ? 'bg-[#717486]/10 text-[#717486] border-[#717486]/30'
                 : isBackendConnected
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-slate-100 text-slate-600 border-slate-200'
@@ -280,7 +280,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             <span
               className={`w-1.5 h-1.5 shrink-0 rounded-full ${
                 isSuperAdmin
-                  ? 'bg-purple-500 animate-pulse'
+                  ? 'bg-[#717486] animate-pulse'
                   : isBackendConnected
                     ? 'bg-emerald-500 animate-pulse'
                     : 'bg-slate-400'

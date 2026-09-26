@@ -15,7 +15,7 @@ import {
 } from '../services/api';
 
 const ROLE_COLORS = {
-  superadmin: 'bg-purple-50 text-purple-700 border-purple-200 ring-purple-500/20',
+  superadmin: 'bg-[#717486]/10 text-[#717486] border-[#717486]/30 ring-[#717486]/20',
   admin: 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/20',
   lead: 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/20',
   operator: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/20',
@@ -287,13 +287,13 @@ export function SuperAdminPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-sm shadow-purple-600/20">
+            <div className="w-10 h-10 rounded-xl bg-[#717486] text-white flex items-center justify-center shadow-sm shadow-[#717486]/20">
               <PhosphorIcon name="ShieldCheck" size={24} weight="duotone" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">Super Admin Command Center</h1>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-full bg-[#717486]/10 text-[#717486] border border-[#717486]/30">
                   Global Control Plane
                 </span>
               </div>
@@ -319,7 +319,7 @@ export function SuperAdminPage() {
             size="sm"
             onClick={() => setCreateModalOpen(true)}
             icon={<PhosphorIcon name="UserPlus" size={16} weight="bold" />}
-            className="bg-purple-600 hover:bg-purple-700 text-white border-transparent"
+            className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white border-transparent"
           >
             Provision User
           </Button>
@@ -395,7 +395,7 @@ export function SuperAdminPage() {
           onClick={() => switchSection('overview', 'superadmin')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'overview'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              ? 'border-[#717486] text-[#717486] bg-[#717486]/10'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -407,7 +407,7 @@ export function SuperAdminPage() {
           onClick={() => switchSection('users', 'superadmin-users')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'users'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              ? 'border-[#717486] text-[#717486] bg-[#717486]/10'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -422,7 +422,7 @@ export function SuperAdminPage() {
           onClick={() => switchSection('tenants', 'superadmin-tenants')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'tenants'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              ? 'border-[#717486] text-[#717486] bg-[#717486]/10'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -437,7 +437,7 @@ export function SuperAdminPage() {
           onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'telemetry'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              ? 'border-[#717486] text-[#717486] bg-[#717486]/10'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -449,7 +449,7 @@ export function SuperAdminPage() {
           onClick={() => switchSection('audit', 'superadmin-audit')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 ${
             activeSection === 'audit'
-              ? 'border-purple-600 text-purple-700 bg-purple-50/50'
+              ? 'border-[#717486] text-[#717486] bg-[#717486]/10'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -461,27 +461,27 @@ export function SuperAdminPage() {
       {/* SECTION 0: COMMAND CENTER / OVERVIEW */}
       {activeSection === 'overview' && (
         <div className="space-y-6">
-          {/* Welcome & Global Posture */}
-          <div className="rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 p-6 text-white border border-purple-800/40 shadow-xl relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* System Posture & Overview */}
+          <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white border border-slate-700/60 shadow-xl relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-[#717486]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2 max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-200 border border-purple-400/30 text-[11px] font-mono font-medium">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#717486]/20 text-slate-200 border border-[#717486]/30 text-[11px] font-mono font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   SIBLIX Core Engine · All Systems Operational
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Welcome, Platform Owner
+                  Super Admin Command Center
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  As the Super Administrator, you oversee the global SIBLIX operating environment: multi-tenant organizations, user identity lifecycle, serverless compute runtime, and cryptographic security auditing.
+                  Centralized control plane: multi-tenant organizations, user identity lifecycle, serverless compute runtime, and system telemetry.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <Button
                   onClick={() => setCreateModalOpen(true)}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-4 py-2.5 shadow-lg shadow-purple-600/30 border-transparent"
+                  className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white font-semibold text-xs px-4 py-2.5 shadow-md border-transparent"
                   icon={<PhosphorIcon name="UserPlus" size={16} weight="bold" />}
                 >
                   Provision User
@@ -489,7 +489,7 @@ export function SuperAdminPage() {
                 <Button
                   variant="outline"
                   onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
-                  className="border-purple-400/40 text-purple-200 hover:bg-purple-900/40 text-xs px-4 py-2.5"
+                  className="border-slate-600 text-slate-200 hover:bg-slate-800 text-xs px-4 py-2.5"
                   icon={<PhosphorIcon name="Cpu" size={16} weight="duotone" />}
                 >
                   Inspect Health
@@ -511,13 +511,13 @@ export function SuperAdminPage() {
               {/* Module 1: User Directory */}
               <Card
                 onClick={() => switchSection('users', 'superadmin-users')}
-                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="p-5 hover:border-[#717486]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#717486]/10 text-[#717486] flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
                     <PhosphorIcon name="Users" size={22} weight="duotone" />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-purple-700 transition-colors">
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-[#717486] transition-colors">
                     User Directory
                   </h4>
                   <p className="text-xs text-slate-500 mt-1">
@@ -525,8 +525,8 @@ export function SuperAdminPage() {
                   </p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="font-mono text-purple-700 font-bold">{users.length} accounts</span>
-                  <span className="text-purple-600 flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
+                  <span className="font-mono text-[#717486] font-bold">{users.length} accounts</span>
+                  <span className="text-[#717486] flex items-center gap-1 font-medium group-hover:translate-x-0.5 transition-transform">
                     Manage <PhosphorIcon name="ArrowRight" size={12} />
                   </span>
                 </div>
@@ -535,7 +535,7 @@ export function SuperAdminPage() {
               {/* Module 2: Organizations & Tenants */}
               <Card
                 onClick={() => switchSection('tenants', 'superadmin-tenants')}
-                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="p-5 hover:border-[#717486]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
@@ -559,7 +559,7 @@ export function SuperAdminPage() {
               {/* Module 3: System Health & Telemetry */}
               <Card
                 onClick={() => switchSection('telemetry', 'superadmin-telemetry')}
-                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="p-5 hover:border-[#717486]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
@@ -583,7 +583,7 @@ export function SuperAdminPage() {
               {/* Module 4: Security Audit Trail */}
               <Card
                 onClick={() => switchSection('audit', 'superadmin-audit')}
-                className="p-5 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="p-5 hover:border-[#717486]/40 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
               >
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform mb-3">
@@ -612,7 +612,7 @@ export function SuperAdminPage() {
             <Card className="p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <PhosphorIcon name="ShieldStar" size={20} className="text-purple-600" />
+                  <PhosphorIcon name="ShieldStar" size={20} className="text-[#717486]" />
                   <h3 className="font-bold text-slate-900 text-sm">Platform Architecture & Security</h3>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">
@@ -622,7 +622,7 @@ export function SuperAdminPage() {
 
               <div className="space-y-3 text-xs">
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-md bg-[#717486]/10 text-[#717486] flex items-center justify-center shrink-0 mt-0.5">
                     <PhosphorIcon name="Database" size={14} />
                   </div>
                   <div>
@@ -663,12 +663,12 @@ export function SuperAdminPage() {
             <Card className="p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <PhosphorIcon name="LockKey" size={20} className="text-purple-600" />
+                  <PhosphorIcon name="LockKey" size={20} className="text-[#717486]" />
                   <h3 className="font-bold text-slate-900 text-sm">Recent Administrative Events</h3>
                 </div>
                 <button
                   onClick={() => switchSection('audit', 'superadmin-audit')}
-                  className="text-[11px] text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-1"
+                  className="text-[11px] text-[#717486] hover:text-[#5e6171] font-semibold flex items-center gap-1"
                 >
                   Full Stream <PhosphorIcon name="ArrowRight" size={12} />
                 </button>
@@ -717,7 +717,7 @@ export function SuperAdminPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by username, email, name, or company..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-sm"
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] transition-all shadow-sm"
               />
             </div>
 
@@ -725,7 +725,7 @@ export function SuperAdminPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 shadow-sm"
+                className="bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#717486]/20 shadow-sm"
               >
                 <option value="">All Roles</option>
                 <option value="superadmin">Super Admin</option>
@@ -738,7 +738,7 @@ export function SuperAdminPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 shadow-sm"
+                className="bg-white border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#717486]/20 shadow-sm"
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -778,14 +778,14 @@ export function SuperAdminPage() {
                         <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+                              <div className="w-8 h-8 rounded-full bg-[#717486] text-white font-bold flex items-center justify-center text-xs shadow-sm">
                                 {(u.full_name || u.username).substring(0, 2).toUpperCase()}
                               </div>
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-semibold text-slate-900">{u.username}</span>
                                   {isSelf && (
-                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-700 font-medium">
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#717486]/10 text-[#717486] font-medium">
                                       You
                                     </span>
                                   )}
@@ -851,7 +851,7 @@ export function SuperAdminPage() {
                                   });
                                 }}
                                 title="Edit Role & Organization"
-                                className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                className="p-1.5 text-slate-500 hover:text-[#717486] hover:bg-[#717486]/10 rounded-lg transition-colors"
                               >
                                 <PhosphorIcon name="PencilSimple" size={15} />
                               </button>
@@ -863,7 +863,7 @@ export function SuperAdminPage() {
                                   setNewPassword('');
                                 }}
                                 title="Reset User Password"
-                                className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                className="p-1.5 text-slate-500 hover:text-[#717486] hover:bg-[#717486]/10 rounded-lg transition-colors"
                               >
                                 <PhosphorIcon name="Key" size={15} />
                               </button>
@@ -928,10 +928,10 @@ export function SuperAdminPage() {
               </Card>
             ) : (
               overview?.organizations?.map((org) => (
-                <Card key={org.name} className="p-5 flex flex-col justify-between hover:border-purple-200 transition-all">
+                <Card key={org.name} className="p-5 flex flex-col justify-between hover:border-[#717486]/40 transition-all">
                   <div>
                     <div className="flex items-center justify-between">
-                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
+                      <div className="w-9 h-9 rounded-xl bg-[#717486]/10 text-[#717486] flex items-center justify-center font-bold text-sm">
                         {org.name.substring(0, 2).toUpperCase()}
                       </div>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -944,7 +944,7 @@ export function SuperAdminPage() {
 
                   <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                     <span>Provisioned Members:</span>
-                    <span className="font-mono font-bold text-purple-700">{org.user_count}</span>
+                    <span className="font-mono font-bold text-[#717486]">{org.user_count}</span>
                   </div>
                 </Card>
               ))
@@ -1025,13 +1025,13 @@ export function SuperAdminPage() {
           </div>
 
           {/* Maintenance Action Row */}
-          <Card className="p-5 bg-gradient-to-r from-purple-900 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <Card className="p-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold flex items-center gap-2">
-                <PhosphorIcon name="Sparkle" size={18} weight="duotone" className="text-purple-300" />
+                <PhosphorIcon name="Sparkle" size={18} weight="duotone" className="text-slate-300" />
                 Database Schema & Migration Health Scan
               </h3>
-              <p className="text-xs text-purple-200/80 mt-1 max-w-xl">
+              <p className="text-xs text-slate-300 mt-1 max-w-xl">
                 Executes additive schema verifications across all tables (`users`, `documents`, `audit_logs`, `shipments`)
                 and confirms pool readiness.
               </p>
@@ -1039,7 +1039,7 @@ export function SuperAdminPage() {
             <Button
               onClick={handleRunMaintenance}
               disabled={actionLoading}
-              className="bg-purple-500 hover:bg-purple-400 text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-lg"
+              className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white font-semibold text-xs px-4 py-2 shrink-0 shadow-md border-transparent"
             >
               {actionLoading ? 'Running Scan...' : 'Trigger Maintenance Check'}
             </Button>
@@ -1081,7 +1081,7 @@ export function SuperAdminPage() {
             ) : (
               auditLogs.map((log) => (
                 <div key={log.id} className="p-4 hover:bg-slate-50/50 transition-colors flex items-start gap-3.5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#717486]/10 text-[#717486] flex items-center justify-center shrink-0 mt-0.5">
                     <PhosphorIcon name="Shield" size={17} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1096,7 +1096,7 @@ export function SuperAdminPage() {
                     </div>
                     <p className="text-xs text-slate-600 mt-1">{log.description}</p>
                     <div className="flex items-center gap-4 text-[10px] text-slate-400 mt-2 font-mono">
-                      <span>Operator: {log.operator_id || log.owner || 'system'}</span>
+                      <span>Operator: {log.operator_id || log.user_id || 'system'}</span>
                       <span>Tenant: {log.organization || 'Global'}</span>
                       {log.verification_hash && (
                         <span className="text-emerald-600 flex items-center gap-1">
@@ -1119,7 +1119,7 @@ export function SuperAdminPage() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <PhosphorIcon name="UserPlus" size={18} className="text-purple-600" />
+                <PhosphorIcon name="UserPlus" size={18} className="text-[#717486]" />
                 Provision New User Account
               </h3>
               <button
@@ -1141,7 +1141,7 @@ export function SuperAdminPage() {
                   value={createForm.username}
                   onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
                   placeholder="e.g. operator_john"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1156,7 +1156,7 @@ export function SuperAdminPage() {
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                   placeholder="Minimum 8 characters"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1170,7 +1170,7 @@ export function SuperAdminPage() {
                     value={createForm.full_name}
                     onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
                     placeholder="John Doe"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                   />
                 </div>
 
@@ -1183,7 +1183,7 @@ export function SuperAdminPage() {
                     value={createForm.email}
                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                     placeholder="john@company.com"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                   />
                 </div>
               </div>
@@ -1196,7 +1196,7 @@ export function SuperAdminPage() {
                   <select
                     value={createForm.role}
                     onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none bg-white"
                   >
                     <option value="operator">Operations Officer</option>
                     <option value="lead">Team Lead</option>
@@ -1215,7 +1215,7 @@ export function SuperAdminPage() {
                     value={createForm.organization}
                     onChange={(e) => setCreateForm({ ...createForm, organization: e.target.value })}
                     placeholder="e.g. Awash Bank"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                   />
                 </div>
               </div>
@@ -1229,7 +1229,7 @@ export function SuperAdminPage() {
                   value={createForm.job_title}
                   onChange={(e) => setCreateForm({ ...createForm, job_title: e.target.value })}
                   placeholder="Senior Import/Export Specialist"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1241,7 +1241,7 @@ export function SuperAdminPage() {
                   type="submit"
                   size="sm"
                   disabled={actionLoading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white border-transparent"
                 >
                   {actionLoading ? 'Creating...' : 'Provision User'}
                 </Button>
@@ -1257,7 +1257,7 @@ export function SuperAdminPage() {
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <PhosphorIcon name="PencilSimple" size={18} className="text-purple-600" />
+                <PhosphorIcon name="PencilSimple" size={18} className="text-[#717486]" />
                 Modify User: {editUser.username}
               </h3>
               <button onClick={() => setEditUser(null)} className="text-slate-400 hover:text-slate-600 p-1">
@@ -1274,7 +1274,7 @@ export function SuperAdminPage() {
                   <select
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none bg-white"
                   >
                     <option value="operator">Operations Officer</option>
                     <option value="lead">Team Lead</option>
@@ -1291,7 +1291,7 @@ export function SuperAdminPage() {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none bg-white"
                   >
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
@@ -1308,7 +1308,7 @@ export function SuperAdminPage() {
                   value={editForm.organization}
                   onChange={(e) => setEditForm({ ...editForm, organization: e.target.value })}
                   placeholder="e.g. Ethiopian Shipping Lines"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1321,7 +1321,7 @@ export function SuperAdminPage() {
                   value={editForm.job_title}
                   onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
                   placeholder="Terminal Inspector"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1334,7 +1334,7 @@ export function SuperAdminPage() {
                     type="text"
                     value={editForm.full_name}
                     onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                   />
                 </div>
 
@@ -1346,7 +1346,7 @@ export function SuperAdminPage() {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                   />
                 </div>
               </div>
@@ -1359,7 +1359,7 @@ export function SuperAdminPage() {
                   type="submit"
                   size="sm"
                   disabled={actionLoading}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white border-transparent"
                 >
                   {actionLoading ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -1375,7 +1375,7 @@ export function SuperAdminPage() {
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <PhosphorIcon name="Key" size={18} className="text-amber-500" />
+                <PhosphorIcon name="Key" size={18} className="text-[#717486]" />
                 Reset Password
               </h3>
               <button onClick={() => setPasswordModalUser(null)} className="text-slate-400 hover:text-slate-600 p-1">
@@ -1399,7 +1399,7 @@ export function SuperAdminPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimum 8 characters"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-purple-500/20 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-[#717486]/20 focus:border-[#717486] focus:outline-none"
                 />
               </div>
 
@@ -1411,7 +1411,7 @@ export function SuperAdminPage() {
                   type="submit"
                   size="sm"
                   disabled={actionLoading}
-                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  className="bg-[#717486] hover:bg-[#5e6171] active:bg-[#525564] text-white border-transparent"
                 >
                   {actionLoading ? 'Updating...' : 'Update Password'}
                 </Button>

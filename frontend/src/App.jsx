@@ -85,9 +85,9 @@ export function AppContent() {
     );
   }
 
-  // 3. WORKSPACE VIEWS (Super Admin Platform Owner vs Operations Desk)
+  // 3. WORKSPACE VIEWS (Super Admin vs Operations Desk)
   const renderAppView = () => {
-    // Super Admin: Exclusively system governance & owner telemetry — NO processing features
+    // Super Admin: Exclusively system governance & platform telemetry — NO processing features
     if (isSuperAdmin) {
       if (activeTab === 'profile') {
         return <ProfilePage />;
@@ -152,7 +152,7 @@ export function AppContent() {
             {isSuperAdmin ? (
               <>
                 <span>
-                  SIBLIX<span className="text-purple-600 font-bold">.ROOT</span> · Platform Ownership & System Governance
+                  SIBLIX<span className="text-[#717486] font-bold">.ROOT</span> · Super Admin & System Governance
                 </span>
                 <span className="font-mono text-[11px] text-slate-400">
                   Global Multi-Tenant Control Plane · Telemetry & Oversight
