@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { VoxideClient, VoxideWidget } from '@voxide/react';
+import { Microphone, Lock } from '@phosphor-icons/react';
 import { useApp } from '../../context/AppContext';
 import { generateDiscrepancyBriefingText } from '../../utils/audioBriefing';
 
@@ -1217,9 +1218,52 @@ export function Assistant() {
     return () => window.removeEventListener('keydown', handleHotkey, true);
   }, []);
 
-  // Strict DOM render guard: NEVER render VoxideWidget unless user is authenticated!
+  // Locked floating action button handler
+  const handleLockedClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      ai.disconnect();
+    } catch {}
+    app?.openAuthWithNotice?.(
+      'Authentication required: Please sign in or create an account to unlock SIBLIX Voice Assistant.',
+      'signin'
+    );
+    app?.addToast?.(
+      'Voice Assistant is locked. Please sign in to activate hands-free AI triage.',
+      'warning'
+    );
+  };
+
+  // If user is unauthenticated, render the locked floating mic button
   if (!app?.isAuthenticated || !app?.token || !app?.username) {
-    return null;
+    return (
+      <div className="fixed bottom-6 right-6 z-50 flex items-center group">
+        {/* Tooltip on hover */}
+        <div className="absolute right-full mr-3.5 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white text-xs font-medium shadow-2xl border border-slate-700/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap flex items-center gap-2 transform translate-x-1 group-hover:translate-x-0">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span>Voice AI Locked · Sign in to use</span>
+          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700">Alt+V</span>
+        </div>
+
+        {/* Floating Locked Mic Button */}
+        <button
+          type="button"
+          onClick={handleLockedClick}
+          aria-label="Voice Assistant Locked - Sign in to activate"
+          title="Voice Assistant is locked. Click to sign in."
+          className="relative w-14 h-14 rounded-full bg-slate-900/95 hover:bg-slate-850 text-slate-300 hover:text-white border-2 border-slate-700/80 hover:border-amber-400/80 shadow-2xl backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-amber-500/20 cursor-pointer"
+        >
+          {/* Microphone Icon */}
+          <Microphone size={24} weight="duotone" className="text-slate-300 group-hover:text-amber-400 transition-colors" />
+
+          {/* Lock Badge */}
+          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow-lg border-2 border-slate-900">
+            <Lock size={11} weight="bold" />
+          </div>
+        </button>
+      </div>
+    );
   }
 
   // Render VoxideWidget passing user-specific theme color: Storm Grey (#717486) for Super Admin, Bright Orange (#FF6B00) for Operations
