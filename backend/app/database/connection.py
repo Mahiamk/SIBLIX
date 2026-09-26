@@ -11,9 +11,10 @@ production) unchanged:
 import os
 from contextlib import contextmanager
 
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import SQLModel, Session, create_engine, select
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./storage/app.db")
+_default_db = "sqlite:////tmp/app.db" if os.environ.get("VERCEL") else "sqlite:///./storage/app.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", _default_db)
 
 _connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 10}
 
@@ -105,9 +106,40 @@ def init_db():
     SQLModel.metadata before create_all runs."""
     try:
         from app.models import (email, document, shipment, discrepancy, review,  # noqa: F401
-                                user, email_account, dataset_upload, shipment_folder, audit)  # noqa: F401
+                                user as user_model, email_account, dataset_upload, shipment_folder, audit)  # noqa: F401
         SQLModel.metadata.create_all(engine)
         _apply_additive_migrations()
+
+        # Seed default admin and demo accounts if missing
+        try:
+            with Session(engine) as session:
+                admin_user = session.exec(select(user_model.User).where(user_model.User.username == "admin")).first()
+                if not admin_user:
+                    from app.api.auth import hash_password
+                    session.add(user_model.User(
+                        username="admin",
+                        email="admin@siblix.ai",
+                        password_hash=hash_password("admin123"),
+                        full_name="Admin Lead",
+                        role="admin",
+                        organization="Maritime Assurance Desk",
+                        job_title="Lead Verification Officer",
+                    ))
+                demo_user = session.exec(select(user_model.User).where(user_model.User.username == "demo")).first()
+                if not demo_user:
+                    from app.api.auth import hash_password
+                    session.add(user_model.User(
+                        username="demo",
+                        email="operator@siblix.ai",
+                        password_hash=hash_password("demo1234"),
+                        full_name="Demo Operator",
+                        role="operator",
+                        organization="Modjo Dry Port Operations",
+                        job_title="Logistics Specialist",
+                    ))
+                session.commit()
+        except Exception as seed_exc:
+            print(f"Notice: user seeding skipped: {seed_exc}")
     except Exception as exc:
         print(f"Warning: init_db encountered error: {exc}")
 

@@ -4,6 +4,14 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/(auth|emails|email-accounts|profile|documents|comparison|reviews|evaluation|upload|dashboard|submit|health|audit|shipments)(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
