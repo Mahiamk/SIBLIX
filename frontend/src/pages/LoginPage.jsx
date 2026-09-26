@@ -222,7 +222,7 @@ export function LoginPage() {
               loading={loading}
               className="w-full justify-center font-semibold py-2.5 mt-2 rounded-xl text-sm shadow-sm shadow-brand-500/20"
             >
-              {mode === 'signin' ? 'Sign In to Workspace' : 'Create Account'}
+              {mode === 'signin' ? 'Login' : 'Create Account'}
             </Button>
           </form>
 
