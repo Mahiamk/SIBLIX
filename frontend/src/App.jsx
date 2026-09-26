@@ -19,6 +19,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AuditPage } from './pages/AuditPage';
 import { LoginPage } from './pages/LoginPage';
 import { Assistant } from './components/voice/Assistant';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 const SIDEBAR_STORAGE_KEY = 'sdoc_sidebar_collapsed';
 
@@ -159,10 +160,12 @@ export function AppContent() {
 
 export function App() {
   return (
-    <>
+    <ErrorBoundary>
       <AppContent />
-      <Assistant />
-    </>
+      <ErrorBoundary fallback={null}>
+        <Assistant />
+      </ErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
