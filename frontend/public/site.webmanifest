@@ -1,0 +1,17 @@
+{
+  "name": "SIBLIX — Autonomous AI Shipping Document Verification",
+  "short_name": "SIBLIX AI",
+  "description": "Enterprise multimodal AI engine verifying Bills of Lading, Commercial Invoices, and Packing Lists. Reconciles cross-document discrepancies in real time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090D16",
+  "theme_color": "#717486",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64 128x128 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

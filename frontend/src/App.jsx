@@ -51,6 +51,39 @@ export function AppContent() {
     setMobileNavOpen(false);
   }, [activeTab]);
 
+  // Dynamic SEO Page Titles & Browser Tab Presence
+  useEffect(() => {
+    const titles = {
+      landing: 'SIBLIX — Autonomous AI Shipping Document Verification & Discrepancy Auditing',
+      dashboard: 'Operations Desk — SIBLIX',
+      emails: 'Inbox & Telemetry — SIBLIX',
+      detail: 'Shipment Inspection — SIBLIX',
+      reviews: 'Discrepancy Reviews — SIBLIX',
+      evaluation: 'Accuracy & Benchmark Telemetry — SIBLIX',
+      audit: 'Audit Log & Governance — SIBLIX',
+      superadmin: 'Super Admin Platform Console — SIBLIX',
+      settings: 'Workspace Settings — SIBLIX',
+      profile: 'Organization Profile — SIBLIX',
+    };
+
+    const currentTitle = (!isAuthenticated && activeTab !== 'landing')
+      ? 'Sign In — SIBLIX Operations Desk'
+      : (titles[activeTab] || 'SIBLIX — AI Shipping Document Verification');
+
+    document.title = currentTitle;
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        document.title = '🚢 SIBLIX — AI Operations Desk';
+      } else {
+        document.title = currentTitle;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [activeTab, isAuthenticated]);
+
   // 1. PUBLIC MARKETING WEBSITE (Completely separate from Dashboard)
   if (activeTab === 'landing') {
     return (

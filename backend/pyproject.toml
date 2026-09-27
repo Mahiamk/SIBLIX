@@ -19,4 +19,13 @@ dependencies = [
     "pdf2image>=1.17.0",
     "Pillow>=10.4.0",
     "openai>=1.51.0",
+    "pytest>=8.3.3",
 ]
+
+[tool.pyright]
+extraPaths = ["."]
+include = ["app", "tests", "scripts"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
