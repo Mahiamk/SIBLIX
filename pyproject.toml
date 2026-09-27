@@ -1,0 +1,13 @@
+[project]
+name = "siblix-monorepo"
+version = "1.0.0"
+description = "SIBLIX Intelligent Document Processing & Cross-Validation Engine Monorepo"
+requires-python = "~=3.12.0"
+
+[tool.pyright]
+extraPaths = ["backend", "api"]
+include = ["backend", "api"]
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
