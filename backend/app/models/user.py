@@ -1,6 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class User(SQLModel, table=True):
@@ -20,4 +24,4 @@ class User(SQLModel, table=True):
     status: str = Field(default="active")  # 'active' | 'suspended'
     token_version: int = Field(default=1)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
