@@ -225,15 +225,7 @@ export function EvaluationPage() {
       setSubmissionData(res);
       addToast('Benchmark submission.json successfully generated!', 'success');
     } catch (err) {
-      const mockSubmission = {
-        generated_at: new Date().toISOString(),
-        platform: 'SIBLIX.AI Enterprise v2.5',
-        total_records: emails.length,
-        benchmark: scores,
-        summary: `${emails.length} shipping correspondence records processed across workspace categories.`,
-      };
-      setSubmissionData(mockSubmission);
-      addToast('Generated submission package (Offline fallback)', 'success');
+      addToast(`Failed to generate benchmark submission: ${err.message}`, 'error');
     } finally {
       setGenerating(false);
     }
