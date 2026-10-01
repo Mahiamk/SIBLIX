@@ -1,8 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from typing import Optional, List
 
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class ShipmentFolder(SQLModel, table=True):
@@ -32,8 +36,8 @@ class ShipmentFolder(SQLModel, table=True):
     regulatory_status: str = Field(default="NOT_APPLICABLE")  # NOT_APPLICABLE | COMPLIANT | NON_COMPLIANT
     regulatory_defects: str = "[]"  # JSON list of regulatory rule defects
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     def defect_fields_list(self) -> List[str]:
         try:
