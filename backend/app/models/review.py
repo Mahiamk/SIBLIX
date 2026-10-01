@@ -1,7 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class Review(SQLModel, table=True):
@@ -18,6 +22,6 @@ class Review(SQLModel, table=True):
     notes: Optional[str] = None               # review notes / operator notes
     voice_note: Optional[str] = None          # captured spoken voice note audio transcription
     final_result: Optional[str] = None        # JSON-encoded corrected record, when human_decision == correct
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
     resolved_at: Optional[datetime] = None
 
