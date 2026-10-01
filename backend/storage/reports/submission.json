@@ -1,1 +1,16 @@
-{}
+{
+  "email_001": {
+    "category": "BL_COMPARISON",
+    "status": "OK",
+    "review_reason": null,
+    "has_defect": false,
+    "defect_fields": [],
+    "human_reviewed": false,
+    "reviewer": null,
+    "action_taken": null,
+    "audit_reason_code": null,
+    "voice_note": null,
+    "review_notes": null,
+    "reviewed_at": null
+  }
+}
