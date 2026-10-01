@@ -426,13 +426,14 @@ export function AppProvider({ children }) {
       applySession(res);
       addToast(`Welcome back, ${res.full_name || res.username}`, 'success');
       refreshData(true, res.token);
+      return { ok: true, data: res };
     } catch (err) {
-      addToast(
+      const msg =
         err?.message === 'Failed to fetch'
           ? 'Cannot reach the server — sign-in requires a registered account.'
-          : err?.message || 'Invalid username or password',
-        'error',
-      );
+          : err?.message || 'Invalid username or password';
+      addToast(msg, 'error');
+      return { ok: false, error: msg };
     } finally {
       setLoading(false);
     }
@@ -447,17 +448,14 @@ export function AppProvider({ children }) {
       applySession(res);
       addToast(`Account ready. Welcome, ${res.full_name || res.username}`, 'success');
       refreshData(true, res.token);
+      return { ok: true, data: res };
     } catch (err) {
-      const msg = err?.message || 'Registration failed';
-      addToast(
+      const msg =
         err?.message === 'Failed to fetch'
           ? 'Cannot reach the server — registration needs the backend running.'
-          : msg,
-        'error',
-      );
-      if (msg.toLowerCase().includes('already registered')) {
-        setAuthMode('signin');
-      }
+          : err?.message || 'Registration failed';
+      addToast(msg, 'error');
+      return { ok: false, error: msg };
     } finally {
       setLoading(false);
     }
