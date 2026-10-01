@@ -164,6 +164,9 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   // Metrics
+  const [usageStats, setUsageStats] = useState(USAGE_TIME_SERIES);
+  const [fieldStats, setFieldStats] = useState(FIELD_ACCURACY_STATS);
+
   // Keep usage time-series and field accuracy dynamically synchronized with real emails
   useEffect(() => {
     setUsageStats(getDynamicUsageTimeSeries(emails));
