@@ -22,6 +22,7 @@ import logging
 import os
 import secrets
 import time
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -252,6 +253,7 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)):
             job_title=(payload.job_title or "").strip() or None,
             role="operator",
             token_version=1,
+            created_at=datetime.now(timezone.utc),
         )
         session.add(user)
         session.commit()
