@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { INITIAL_EMAILS, USAGE_TIME_SERIES, FIELD_ACCURACY_STATS, getDynamicUsageTimeSeries } from '../constants/mockData';
+import { INITIAL_EMAILS, USAGE_TIME_SERIES, FIELD_ACCURACY_STATS, getDynamicUsageTimeSeries, computeFieldAccuracyStats } from '../constants/mockData';
 import {
   apiLogin,
   apiRegister,
@@ -164,12 +164,10 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   // Metrics
-  const [usageStats, setUsageStats] = useState(USAGE_TIME_SERIES);
-  const [fieldStats, setFieldStats] = useState(FIELD_ACCURACY_STATS);
-
-  // Keep usage time-series dynamically synchronized with accurate dates and counts
+  // Keep usage time-series and field accuracy dynamically synchronized with real emails
   useEffect(() => {
     setUsageStats(getDynamicUsageTimeSeries(emails));
+    setFieldStats(computeFieldAccuracyStats(emails));
   }, [emails]);
 
   // Live Pipeline Progress & Execution State
@@ -444,15 +442,19 @@ export function AppProvider({ children }) {
       // is no account, so we surface the reason instead of faking access.
       const res = await apiRegister(userData);
       applySession(res);
-      addToast(`Account created. Welcome, ${res.full_name || res.username}`, 'success');
+      addToast(`Account ready. Welcome, ${res.full_name || res.username}`, 'success');
       refreshData(true, res.token);
     } catch (err) {
+      const msg = err?.message || 'Registration failed';
       addToast(
         err?.message === 'Failed to fetch'
           ? 'Cannot reach the server — registration needs the backend running.'
-          : err?.message || 'Registration failed',
+          : msg,
         'error',
       );
+      if (msg.toLowerCase().includes('already registered')) {
+        setAuthMode('signin');
+      }
     } finally {
       setLoading(false);
     }
