@@ -18,10 +18,13 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import time
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, field_validator
@@ -252,7 +255,10 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)):
         )
         session.add(user)
         session.commit()
-        session.refresh(user)
+        try:
+            session.refresh(user)
+        except Exception:
+            pass
         return _auth_response(user)
     except HTTPException:
         session.rollback()
@@ -277,10 +283,10 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)):
                     status_code=409,
                     detail=f"Email '{email}' is already registered. Please sign in instead.",
                 )
-        logging.getLogger("uvicorn.error").exception("User registration failed: %s", exc)
+        logger.exception("User registration failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail="Registration failed due to a server error. Please try again.",
+            detail=f"Registration failed: {str(exc)}",
         )
 
 
