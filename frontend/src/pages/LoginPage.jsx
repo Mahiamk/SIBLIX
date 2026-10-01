@@ -11,21 +11,41 @@ export function LoginPage() {
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const mode = authMode || 'signin';
 
-  const handleSubmit = (e) => {
+  const handleTabChange = (targetMode) => {
+    setAuthMode(targetMode);
+    setFormError('');
+  };
+
+  const handleDemoSignIn = async () => {
+    setUser('admin');
+    setPass('admin123');
+    setFormError('');
+    await handleLogin('admin', 'admin123');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
     if (mode === 'signin') {
-      handleLogin(user, pass);
+      const res = await handleLogin(user, pass);
+      if (res && !res.ok) {
+        setFormError(res.error || 'Invalid username or password');
+      }
     } else {
-      handleRegister({
+      const res = await handleRegister({
         username: user,
         password: pass,
         email: email || undefined,
         full_name: fullName || undefined,
         organization: organization || undefined,
       });
+      if (res && !res.ok) {
+        setFormError(res.error || 'Registration failed');
+      }
     }
   };
 
@@ -58,7 +78,7 @@ export function LoginPage() {
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/70 text-xs font-semibold">
             <button
               type="button"
-              onClick={() => setAuthMode('signin')}
+              onClick={() => handleTabChange('signin')}
               className={`flex-1 py-1.5 rounded-lg transition-all text-center ${
                 mode === 'signin'
                   ? 'bg-white text-slate-900 font-bold shadow-xs'
@@ -69,7 +89,7 @@ export function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => setAuthMode('register')}
+              onClick={() => handleTabChange('register')}
               className={`flex-1 py-1.5 rounded-lg transition-all text-center ${
                 mode === 'register'
                   ? 'bg-white text-slate-900 font-bold shadow-xs'
@@ -215,6 +235,30 @@ export function LoginPage() {
               </p>
             )}
 
+            {/* Inline Form Error */}
+            {formError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
+                  <PhosphorIcon name="WarningCircle" size={16} weight="fill" className="text-rose-500 shrink-0 mt-0.5" />
+                  <span className="flex-1 font-medium leading-relaxed">{formError}</span>
+                </div>
+                {formError.toLowerCase().includes('already registered') && mode === 'register' && (
+                  <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between">
+                    <span className="text-[11px] text-rose-600">Already registered this account?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleTabChange('signin');
+                      }}
+                      className="text-[11px] font-bold text-brand-700 hover:text-brand-800 underline flex items-center gap-1"
+                    >
+                      Sign In →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <Button
               type="submit"
               variant="primary"
@@ -222,8 +266,22 @@ export function LoginPage() {
               loading={loading}
               className="w-full justify-center font-semibold py-2.5 mt-2 rounded-xl text-sm shadow-sm shadow-brand-500/20"
             >
-              {mode === 'signin' ? 'Login' : 'Create Account'}
+              {mode === 'signin' ? 'Sign In' : 'Create Account'}
             </Button>
+
+            {mode === 'signin' && (
+              <div className="pt-1 flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={handleDemoSignIn}
+                  className="text-[11px] text-slate-500 hover:text-brand-600 font-medium inline-flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  title="Log in with preconfigured admin credentials"
+                >
+                  <PhosphorIcon name="Lightning" size={13} weight="fill" className="text-amber-500" />
+                  <span>One-Click Demo Sign In (<code>admin</code>)</span>
+                </button>
+              </div>
+            )}
           </form>
 
           {mode === 'signin' && (
@@ -231,7 +289,7 @@ export function LoginPage() {
               Don't have an account yet?{' '}
               <button
                 type="button"
-                onClick={() => setAuthMode('register')}
+                onClick={() => handleTabChange('register')}
                 className="font-semibold text-brand-600 underline hover:text-brand-700 transition-colors"
               >
                 Create an account
