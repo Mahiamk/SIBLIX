@@ -25,7 +25,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, field_validator
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from app.database.connection import get_session
 from app.models.user import User
@@ -212,29 +212,60 @@ def _get_user_from_token(token: str, session: Session) -> User:
 # --------------------------------------------------------------------------
 @router.post("/register", response_model=AuthResponse, status_code=201)
 def register(payload: RegisterRequest, session: Session = Depends(get_session)):
-    """Create an account. This is the only way to obtain access."""
+    """Create an account. This is the only way to obtain access.
+    If the account already exists and the credentials match, seamlessly authenticate.
+    """
     username = payload.username.strip()
-    email = (payload.email or "").strip() or None
+    email = (payload.email or "").strip().lower() or None
 
-    if session.exec(select(User).where(User.username == username)).first():
-        raise HTTPException(status_code=409, detail="Username already registered")
-    if email and session.exec(select(User).where(User.email == email)).first():
-        raise HTTPException(status_code=409, detail="Email already registered")
+    # Check for existing username (case-insensitive)
+    existing_user = session.exec(
+        select(User).where(func.lower(User.username) == username.lower())
+    ).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Username '{username}' is already registered. Please sign in instead.",
+        )
 
-    user = User(
-        username=username,
-        email=email,
-        password_hash=hash_password(payload.password),
-        full_name=(payload.full_name or "").strip() or username,
-        organization=(payload.organization or "").strip() or None,
-        job_title=(payload.job_title or "").strip() or None,
-        role="operator",
-        token_version=1,
-    )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return _auth_response(user)
+    # Check for existing email (case-insensitive)
+    if email:
+        existing_email_user = session.exec(
+            select(User).where(func.lower(User.email) == email)
+        ).first()
+        if existing_email_user:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Email '{email}' is already registered. Please sign in instead.",
+            )
+
+    try:
+        user = User(
+            username=username,
+            email=email,
+            password_hash=hash_password(payload.password),
+            full_name=(payload.full_name or "").strip() or username,
+            organization=(payload.organization or "").strip() or None,
+            job_title=(payload.job_title or "").strip() or None,
+            role="operator",
+            token_version=1,
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return _auth_response(user)
+    except Exception:
+        session.rollback()
+        # Handle concurrent registration or unique constraint race
+        existing = session.exec(
+            select(User).where(func.lower(User.username) == username.lower())
+        ).first()
+        if existing and verify_password(payload.password, existing.password_hash):
+            return _auth_response(existing)
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this username or email already exists. Please sign in.",
+        )
 
 
 @router.post("/login", response_model=AuthResponse)
