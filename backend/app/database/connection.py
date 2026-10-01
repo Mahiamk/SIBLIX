@@ -131,8 +131,23 @@ def init_db():
         print(f"Warning: init_db encountered error: {exc}")
 
 
+_db_initialized = False
+
+
+def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            init_db()
+        except Exception as exc:
+            print(f"Warning: lazy init_db failed: {exc}")
+        finally:
+            _db_initialized = True
+
+
 def get_session():
     """FastAPI dependency: yields a Session per-request."""
+    ensure_db_initialized()
     with Session(engine) as session:
         yield session
 
