@@ -28,6 +28,9 @@ if env_path.exists():
 
 from app.main import app
 
+from fastapi.responses import JSONResponse
+import traceback
+
 # Strip /api prefix if the request arrived through /api/... routing
 @app.middleware("http")
 async def handle_api_prefix(request, call_next):
@@ -36,4 +39,12 @@ async def handle_api_prefix(request, call_next):
         request.scope["path"] = "/"
     elif path.startswith("/api/"):
         request.scope["path"] = path[4:]
-    return await call_next(request)
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        tb = traceback.format_exc()
+        print(f"[VERCEL API EXCEPTION] {exc}\n{tb}", file=sys.stderr)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Internal Server Error: {str(exc)}", "type": type(exc).__name__},
+        )
