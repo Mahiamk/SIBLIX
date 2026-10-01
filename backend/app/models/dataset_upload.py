@@ -1,7 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class DatasetUpload(SQLModel, table=True):
@@ -22,4 +26,4 @@ class DatasetUpload(SQLModel, table=True):
     label: Optional[str] = None                     # dataset name / mailbox address
     emails_created: int = Field(default=0)          # rows this run actually added
     emails_total: int = Field(default=0)            # rows present afterwards
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
