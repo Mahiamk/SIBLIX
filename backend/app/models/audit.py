@@ -1,7 +1,11 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 # --- Standardized Legal Action Taken ---
@@ -40,7 +44,7 @@ class AuditLog(SQLModel, table=True):
     status: str = Field(default="COMPLIANT", index=True)           # COMPLIANT | FLAGGED | RESOLVED | AUTO_APPROVED
     metadata_json: Optional[str] = None
     verification_hash: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    timestamp: datetime = Field(default_factory=utc_now, index=True)
 
 
 def compute_audit_hash(
