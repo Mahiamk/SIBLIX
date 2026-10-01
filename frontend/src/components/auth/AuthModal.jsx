@@ -29,19 +29,39 @@ export function AuthModal() {
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleTabChange = (mode) => {
+    setAuthMode(mode);
+    setFormError('');
+  };
+
+  const handleDemoSignIn = async () => {
+    setUsername('admin');
+    setPassword('admin123');
+    setFormError('');
+    await handleLogin('admin', 'admin123');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
     if (authMode === 'signin') {
-      handleLogin(username, password);
+      const res = await handleLogin(username, password);
+      if (res && !res.ok) {
+        setFormError(res.error || 'Invalid username or password');
+      }
     } else {
-      handleRegister({
+      const res = await handleRegister({
         username,
         password,
         email: email || undefined,
         full_name: fullName || undefined,
         organization: organization || undefined,
       });
+      if (res && !res.ok) {
+        setFormError(res.error || 'Registration failed');
+      }
     }
   };
 
@@ -85,7 +105,7 @@ export function AuthModal() {
         <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/70 text-xs font-medium">
           <button
             type="button"
-            onClick={() => setAuthMode('signin')}
+            onClick={() => handleTabChange('signin')}
             className={`flex-1 py-1 rounded-md transition-all text-center ${
               authMode === 'signin'
                 ? 'bg-white text-slate-900 font-semibold shadow-xs'
@@ -96,7 +116,7 @@ export function AuthModal() {
           </button>
           <button
             type="button"
-            onClick={() => setAuthMode('register')}
+            onClick={() => handleTabChange('register')}
             className={`flex-1 py-1 rounded-md transition-all text-center ${
               authMode === 'register'
                 ? 'bg-white text-slate-900 font-semibold shadow-xs'
@@ -106,6 +126,14 @@ export function AuthModal() {
             Create Account
           </button>
         </div>
+
+        {/* Informative Notice (e.g. Session Expired) */}
+        {authNotice && (
+          <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
+            <PhosphorIcon name="Info" size={16} weight="fill" className="text-amber-500 shrink-0 mt-0.5" />
+            <span className="flex-1">{authNotice}</span>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -243,6 +271,31 @@ export function AuthModal() {
             </p>
           )}
 
+          {/* Inline Form Error */}
+          {formError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <PhosphorIcon name="WarningCircle" size={16} weight="fill" className="text-rose-500 shrink-0 mt-0.5" />
+                <span className="flex-1 font-medium leading-relaxed">{formError}</span>
+              </div>
+              {formError.toLowerCase().includes('already registered') && authMode === 'register' && (
+                <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between">
+                  <span className="text-[11px] text-rose-600">Already registered this account?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode('signin');
+                      setFormError('');
+                    }}
+                    className="text-[11px] font-bold text-brand-700 hover:text-brand-800 underline flex items-center gap-1"
+                  >
+                    Sign In →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <Button
             type="submit"
             variant="primary"
@@ -250,8 +303,22 @@ export function AuthModal() {
             loading={loading}
             className="w-full justify-center font-semibold py-2.5 mt-2 rounded-xl text-sm shadow-sm shadow-brand-500/20"
           >
-            {authMode === 'signin' ? 'Login' : 'Create Account'}
+            {authMode === 'signin' ? 'Sign In' : 'Create Account'}
           </Button>
+
+          {authMode === 'signin' && (
+            <div className="pt-1 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={handleDemoSignIn}
+                className="text-[11px] text-slate-500 hover:text-brand-600 font-medium inline-flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-100 transition-colors"
+                title="Log in with preconfigured admin credentials"
+              >
+                <PhosphorIcon name="Lightning" size={13} weight="fill" className="text-amber-500" />
+                <span>One-Click Demo Sign In (<code>admin</code>)</span>
+              </button>
+            </div>
+          )}
         </form>
 
         {authMode === 'signin' && (
@@ -259,7 +326,7 @@ export function AuthModal() {
             Don't have an account yet?{' '}
             <button
               type="button"
-              onClick={() => setAuthMode('register')}
+              onClick={() => handleTabChange('register')}
               className="font-medium text-slate-900 underline hover:text-brand-600 transition-colors"
             >
               Create an account
