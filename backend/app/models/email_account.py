@@ -1,7 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class EmailAccount(SQLModel, table=True):
@@ -30,4 +34,4 @@ class EmailAccount(SQLModel, table=True):
     last_uid: int = Field(default=0)               # highest IMAP UID ingested
     total_imported: int = Field(default=0)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
