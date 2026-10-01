@@ -36,13 +36,6 @@ export function AuthModal() {
     setFormError('');
   };
 
-  const handleDemoSignIn = async () => {
-    setUsername('admin');
-    setPassword('admin123');
-    setFormError('');
-    await handleLogin('admin', 'admin123');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -305,20 +298,6 @@ export function AuthModal() {
           >
             {authMode === 'signin' ? 'Sign In' : 'Create Account'}
           </Button>
-
-          {authMode === 'signin' && (
-            <div className="pt-1 flex items-center justify-center">
-              <button
-                type="button"
-                onClick={handleDemoSignIn}
-                className="text-[11px] text-slate-500 hover:text-brand-600 font-medium inline-flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-slate-100 transition-colors"
-                title="Log in with preconfigured admin credentials"
-              >
-                <PhosphorIcon name="Lightning" size={13} weight="fill" className="text-amber-500" />
-                <span>One-Click Demo Sign In (<code>admin</code>)</span>
-              </button>
-            </div>
-          )}
         </form>
 
         {authMode === 'signin' && (
