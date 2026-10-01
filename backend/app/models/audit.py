@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from sqlmodel import SQLModel, Field
 
 
@@ -20,7 +20,7 @@ REASON_DEFECT_STANDS_UNRESOLVED = "DEFECT_STANDS_UNRESOLVED"
 
 
 class AuditLog(SQLModel, table=True):
-    __tablename__ = "audit_logs"
+    __tablename__: Any = "audit_logs"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     organization: Optional[str] = Field(default=None, index=True)
