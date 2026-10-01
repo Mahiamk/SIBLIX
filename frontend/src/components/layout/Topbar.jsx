@@ -92,21 +92,24 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
         ) : (
           /* OPERATOR CONTROLS: Shipment Search & Verification Pipeline */
           <>
-            {/* Search */}
-            <button
-              onClick={() => setCommandPaletteOpen(true)}
-              className="ml-auto lg:ml-6 flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 text-slate-500 hover:text-slate-700 text-xs transition-colors shadow-subtle shrink-0 lg:flex-1 lg:max-w-sm"
-              title="Search shipments (⌘K)"
-            >
-              <PhosphorIcon name="MagnifyingGlass" size={14} weight="duotone" />
-              <span className="hidden sm:inline">Search shipments...</span>
-              <kbd className="hidden sm:inline lg:ml-auto font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-400">
-                ⌘K
-              </kbd>
-            </button>
+            {/* Search - Centered */}
+            <div className="flex-1 flex justify-center px-2 sm:px-6">
+              <button
+                onClick={() => setCommandPaletteOpen(true)}
+                className="w-full max-w-xs sm:max-w-md flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 text-slate-500 hover:text-slate-700 text-xs transition-colors shadow-subtle"
+                title="Search shipments (⌘K)"
+              >
+                <PhosphorIcon name="MagnifyingGlass" size={14} weight="duotone" />
+                <span className="hidden sm:inline">Search shipments...</span>
+                <span className="sm:hidden">Search...</span>
+                <kbd className="ml-auto font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-400">
+                  ⌘K
+                </kbd>
+              </button>
+            </div>
 
-            {/* Quick actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Quick actions - Right aligned */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
