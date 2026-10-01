@@ -20,7 +20,7 @@
       "destination": "/api/index.py"
     },
     {
-      "source": "/(auth|emails|email-accounts|profile|documents|comparison|reviews|evaluation|upload|dashboard|submit|audit|shipments)(.*)",
+      "source": "/auth/(.*)",
       "destination": "/api/index.py"
     },
     {
