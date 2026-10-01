@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { PhosphorIcon } from '../ui/PhosphorIcon';
 
-export const SIDEBAR_WIDTH = 280;
+export const SIDEBAR_WIDTH = 285;
 export const SIDEBAR_WIDTH_COLLAPSED = 68;
 
 /**
@@ -94,8 +94,8 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
       <aside
         id="app-sidebar"
         aria-label="Main navigation"
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 transition-[width,transform] duration-200 ease-out w-[290px] max-w-[85vw] ${
-          collapsed ? 'lg:w-[68px]' : 'lg:w-[280px]'
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 pl-[5px] transition-[width,transform] duration-200 ease-out w-[295px] max-w-[85vw] ${
+          collapsed ? 'lg:w-[68px]' : 'lg:w-[285px]'
         } ${
           mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         }`}
