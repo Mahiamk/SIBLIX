@@ -84,7 +84,9 @@ def list_company_audits(
         ]
 
     total = len(all_matching)
-    sliced = all_matching[offset : offset + limit]
+    lim = int(getattr(limit, "default", 100)) if not isinstance(limit, int) else limit
+    off = int(getattr(offset, "default", 0)) if not isinstance(offset, int) else offset
+    sliced = all_matching[off : off + lim]
 
     # Compute summary KPIs
     compliant_count = sum(1 for a in all_matching if a.status in ("COMPLIANT", "RESOLVED", "AUTO_APPROVED"))
