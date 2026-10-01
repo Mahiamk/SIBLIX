@@ -41,7 +41,7 @@ export function Topbar({ onToggleMobileNav, mobileNavOpen }) {
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
-      <div className="flex items-center gap-3 h-16 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center gap-4 h-16 px-5 sm:px-8 lg:px-10 xl:px-12">
         {/* Small-screen drawer trigger (the rail's own toggle handles lg+) */}
         <button
           onClick={onToggleMobileNav}
