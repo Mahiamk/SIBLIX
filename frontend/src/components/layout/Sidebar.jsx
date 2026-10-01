@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { PhosphorIcon } from '../ui/PhosphorIcon';
 
-export const SIDEBAR_WIDTH = 240;
+export const SIDEBAR_WIDTH = 280;
 export const SIDEBAR_WIDTH_COLLAPSED = 68;
 
 /**
@@ -94,14 +94,14 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
       <aside
         id="app-sidebar"
         aria-label="Main navigation"
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 transition-[width,transform] duration-200 ease-out w-[280px] max-w-[85vw] ${
-          collapsed ? 'lg:w-[68px]' : 'lg:w-[240px]'
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-slate-200/80 transition-[width,transform] duration-200 ease-out w-[290px] max-w-[85vw] ${
+          collapsed ? 'lg:w-[68px]' : 'lg:w-[280px]'
         } ${
           mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand */}
-        <div className={`h-16 flex items-center shrink-0 border-b border-slate-100 px-4 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}>
+        <div className={`h-16 flex items-center shrink-0 border-b border-slate-100 px-5 sm:px-6 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}>
           <button
             onClick={() => go(isSuperAdmin ? 'superadmin' : 'dashboard')}
             title={isSuperAdmin ? 'SIBLIX Global — Super Admin' : 'SIBLIX.AI — Operations Desk'}
@@ -144,7 +144,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
         {/* Section heading + collapse toggle, side by side. When the rail
             is collapsed the heading is gone and the toggle centres. */}
         <div
-          className={`hidden lg:flex items-center px-[22px] pt-3 pb-1.5 ${
+          className={`hidden lg:flex items-center px-6 pt-3 pb-1.5 ${
             collapsed ? 'justify-center' : 'justify-between'
           }`}
         >
@@ -158,7 +158,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                 title={userOrganization ? `Organization: ${userOrganization}` : 'Personal Workspace'}
               >
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${userOrganization ? 'bg-brand-500' : 'bg-slate-400'}`} />
-                <span className="text-[11px] font-medium text-slate-600 truncate max-w-[130px]">
+                <span className="text-[11px] font-medium text-slate-600 truncate max-w-[150px]">
                   {userOrganization || 'Personal'}
                 </span>
               </div>
@@ -177,7 +177,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
         </div>
 
         {/* Drawer keeps a plain heading — it has no collapsed state. */}
-        <div className="lg:hidden px-[22px] pt-3 pb-1.5 flex flex-col">
+        <div className="lg:hidden px-6 pt-3 pb-1.5 flex flex-col">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             Workspace
           </p>
@@ -189,7 +189,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto pb-3 px-2.5 space-y-1">
+        <nav className="flex-1 overflow-y-auto pb-3 px-3.5 space-y-1.5">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
@@ -199,7 +199,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                 title={collapsed ? item.label : undefined}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative w-full flex items-center rounded-xl text-sm transition-colors duration-150 select-none focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                  collapsed && !mobileOpen ? 'justify-center h-11 px-0' : 'gap-3 px-3 py-2.5'
+                  collapsed && !mobileOpen ? 'justify-center h-11 px-0' : 'gap-3.5 px-3.5 py-2.5'
                 } ${
                   isActive
                     ? (isSuperAdmin ? 'bg-[#717486]/10 text-[#717486] font-semibold' : 'bg-brand-50 text-brand-700 font-semibold')
@@ -237,7 +237,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
         </nav>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-slate-100 p-2.5 space-y-1">
+        <div className="shrink-0 border-t border-slate-100 p-3.5 space-y-1.5">
           {/* Back to marketing site */}
           <button
             onClick={() => go('landing')}
