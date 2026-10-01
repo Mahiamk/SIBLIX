@@ -1,8 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
 from app.models.shipment_folder import ShipmentFolder  # noqa: F401
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class Email(SQLModel, table=True):
@@ -19,7 +23,7 @@ class Email(SQLModel, table=True):
     category: Optional[str] = None                  # BL_COMPARISON | SI_REQUEST | ...
     classification_confidence: Optional[float] = None
     status: str = Field(default="PENDING")           # PENDING|PROCESSING|OK|MISMATCH|NEEDS_REVIEW
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     class Config:
         populate_by_name = True
