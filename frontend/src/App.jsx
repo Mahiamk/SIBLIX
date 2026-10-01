@@ -175,13 +175,13 @@ export function AppContent() {
         {/* Live Ingestion Progress Drawer / Banner (Operators only) */}
         {!isSuperAdmin && <PipelineProgressBanner />}
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 xl:px-12 py-6 sm:py-8">
           {renderAppView()}
         </main>
 
         {/* Workspace Footer */}
         <footer className="border-t border-slate-200/80 bg-white/60 py-4 text-center text-xs text-slate-400">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2">
             {isSuperAdmin ? (
               <>
                 <span>
