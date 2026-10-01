@@ -254,17 +254,33 @@ def register(payload: RegisterRequest, session: Session = Depends(get_session)):
         session.commit()
         session.refresh(user)
         return _auth_response(user)
-    except Exception:
+    except HTTPException:
+        session.rollback()
+        raise
+    except Exception as exc:
         session.rollback()
         # Handle concurrent registration or unique constraint race
         existing = session.exec(
             select(User).where(func.lower(User.username) == username.lower())
         ).first()
-        if existing and verify_password(payload.password, existing.password_hash):
-            return _auth_response(existing)
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Username '{username}' is already registered. Please sign in instead.",
+            )
+        if email:
+            existing_email = session.exec(
+                select(User).where(func.lower(User.email) == email)
+            ).first()
+            if existing_email:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Email '{email}' is already registered. Please sign in instead.",
+                )
+        logging.getLogger("uvicorn.error").exception("User registration failed: %s", exc)
         raise HTTPException(
-            status_code=409,
-            detail="An account with this username or email already exists. Please sign in.",
+            status_code=500,
+            detail="Registration failed due to a server error. Please try again.",
         )
 
 
