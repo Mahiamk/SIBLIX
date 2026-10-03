@@ -118,35 +118,15 @@
   color: #717486 !important;
 }
 
-/* Hide conversation rectangle on mobile screens (< 768px) */
-@media (max-width: 767px) {
-  .vx-enter > div:not(:last-child),
-  .vx-enter div:has(.siblix-minimize-btn),
-  .vx-enter div:has(.vx-scroll),
-  .vx-enter [role="dialog"],
-  .vx-scroll,
-  [class*="vx-scroll"],
-  .siblix-panel-hidden,
-  [data-siblix-panel="true"] {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-  }
-}
-
-/* Desktop View: Properly sized conversation rectangle with perfect width and length */
-@media (min-width: 768px) {
-  .siblix-voice-draggable .vx-enter > div:not(:last-child),
-  .siblix-voice-draggable .vx-enter div:has(.siblix-minimize-btn),
-  .siblix-voice-draggable [data-siblix-panel="true"] {
-    width: 384px !important;
-    max-width: calc(100vw - 48px) !important;
-    height: 530px !important;
-    max-height: calc(100vh - 120px) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
-    overflow: hidden !important;
-  }
+/* Completely suppress any conversation rectangle or panel popup anywhere */
+.vx-enter,
+.vx-enter *,
+[class*="vx-enter"],
+[class*="vx-scroll"],
+[role="dialog"][class*="vx"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Draggable Voxide Floating Container */
@@ -156,42 +136,10 @@
   touch-action: none;
 }
 
-.siblix-voice-draggable .vx-enter {
-  position: relative !important;
-  bottom: auto !important;
-  right: auto !important;
-  left: auto !important;
-  top: auto !important;
-}
-
-.siblix-voice-draggable .vx-enter button[type="button"]:not([aria-label*="Close"]):not([aria-label*="End"]) {
-  cursor: grab;
-}
-
 .siblix-voice-draggable.is-dragging,
 .siblix-voice-draggable.is-dragging * {
   cursor: grabbing !important;
   user-select: none !important;
-}
-
-/* Minimized Mode: collapses conversation rectangle and shows sleek dock pill */
-.siblix-voice-draggable.is-minimized .vx-enter > div:not(:last-child),
-.siblix-voice-draggable.is-minimized .vx-enter div:has(.siblix-minimize-btn),
-.siblix-voice-draggable.is-minimized .vx-enter div:has(.vx-scroll),
-.siblix-voice-draggable.is-minimized .vx-enter div:has(button[aria-label="Close chat"]),
-.siblix-voice-draggable.is-minimized [data-siblix-panel="true"],
-.siblix-panel-hidden {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  height: 0 !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
 }
 
 /* Soundwave and microphone vibration animations */
@@ -254,46 +202,3 @@
 .animate-mic-vibrate {
   animation: micVibration 0.8s ease-in-out infinite;
 }
-
-/* Desktop launcher button morph to mic when voice is active */
-.siblix-voice-draggable.voice-active .vx-enter > button:last-child {
-  position: relative !important;
-  background: #FF6B00 !important;
-  box-shadow: 0 0 25px rgba(255, 107, 0, 0.6) !important;
-}
-
-.siblix-voice-draggable.voice-active .vx-enter > button:last-child > svg {
-  opacity: 0 !important;
-}
-
-.siblix-voice-draggable.voice-active .vx-enter > button:last-child::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%23ffffff'%3E%3Cpath d='M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm112,64a8,8,0,0,1-16,0,64,64,0,0,1-128,0,8,8,0,0,1-16,0,80.11,80.11,0,0,0,72,79.6V232a8,8,0,0,1-16,0H88a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16H152a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,0,208,128Z'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 26px 26px;
-  animation: micVibration 0.8s ease-in-out infinite;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.siblix-voice-draggable.voice-active .vx-enter > button:last-child::before {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 107, 0, 0.7);
-  animation: soundwavePing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.siblix-voice-draggable.is-speaking-or-listening .vx-enter > button:last-child::before {
-  animation: soundwavePing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
-  border-color: rgba(255, 107, 0, 0.95);
-}
-
-
-
