@@ -11,7 +11,7 @@ const appBridgeRef = { current: null };
 // Initialize Voxide Client with publishable key from environment variable
 // Explicitly configure panel launcherMode so users get live streaming transcriptions,
 // status updates, and visual feedback rather than an opaque voice bar.
-const VOXIDE_PUBLIC_KEY = import.meta.env.VITE_VOXIDE_PUBLIC_KEY || 'vox_pub_251bbeb18bb55103cc9f8901a01cff0cdaac84be261d9256';
+const VOXIDE_PUBLIC_KEY = import.meta.env.VITE_VOXIDE_PUBLIC_KEY;
 
 export const ai = new VoxideClient({
   publicKey: VOXIDE_PUBLIC_KEY,
@@ -883,7 +883,7 @@ ai.register({
         try {
           ai.disconnect();
           ai.setUser(null);
-        } catch {}
+        } catch { }
         return {
           status: 'ok',
           action: 'logout',
@@ -1082,7 +1082,7 @@ ai.use(async (ctx, next, cancel) => {
     cancel();
     try {
       ai.disconnect();
-    } catch {}
+    } catch { }
     app?.addToast?.(
       'Security Alert: Unauthorized voice command rejected. Please sign in to authenticate.',
       'error'
@@ -1113,7 +1113,7 @@ export function Assistant() {
       try {
         ai.disconnect();
         ai.setUser(null);
-      } catch {}
+      } catch { }
       prevUserRef.current = null;
       return;
     }
@@ -1182,7 +1182,7 @@ export function Assistant() {
         ) {
           try {
             ai.disconnect();
-          } catch {}
+          } catch { }
           currentApp?.addToast?.(
             'Security Alert: Voice session terminated. You must be authenticated to use SIBLIX Voice Assistant.',
             'error'
@@ -1204,7 +1204,7 @@ export function Assistant() {
           e.stopImmediatePropagation();
           try {
             ai.disconnect();
-          } catch {}
+          } catch { }
           currentApp?.setAuthMode?.('signin');
           currentApp?.setAuthModalOpen?.(true);
           currentApp?.addToast?.(
@@ -1225,7 +1225,7 @@ export function Assistant() {
     e.stopPropagation();
     try {
       ai.disconnect();
-    } catch {}
+    } catch { }
     app?.setAuthMode?.('signin');
     app?.setAuthModalOpen?.(true);
     app?.addToast?.(
