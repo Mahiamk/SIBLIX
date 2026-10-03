@@ -8,11 +8,13 @@ import { generateDiscrepancyBriefingText } from '../../utils/audioBriefing';
 // Shared reference so Voxide action handlers can call live AppContext functions
 const appBridgeRef = { current: null };
 
-// Initialize Voxide Client with publishable key
+// Initialize Voxide Client with publishable key from environment variable
 // Explicitly configure panel launcherMode so users get live streaming transcriptions,
 // status updates, and visual feedback rather than an opaque voice bar.
+const VOXIDE_PUBLIC_KEY = import.meta.env.VITE_VOXIDE_PUBLIC_KEY || 'vox_pub_251bbeb18bb55103cc9f8901a01cff0cdaac84be261d9256';
+
 export const ai = new VoxideClient({
-  publicKey: 'vox_pub_251bbeb18bb55103cc9f8901a01cff0cdaac84be261d9256',
+  publicKey: VOXIDE_PUBLIC_KEY,
   ui: {
     hotkeyActivate: 'alt+v', // Alt+V toggles hands-free voice triage
     launcherMode: 'panel',
