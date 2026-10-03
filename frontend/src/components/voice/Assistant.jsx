@@ -1526,37 +1526,37 @@ export function Assistant() {
         /* ============================================================== */
         <>
           {/* Attached Status Badge: OFF */}
-          <span className="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-slate-800 text-[9px] font-bold font-mono text-slate-400 border border-slate-700 shadow flex items-center gap-1 pointer-events-none z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+          <span className="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-slate-950/90 text-[9px] font-bold font-mono text-slate-200 border border-slate-700 shadow flex items-center gap-1 pointer-events-none z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
             OFF
           </span>
 
           {/* Desktop Hover Tooltip */}
           <div className="hidden sm:flex absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white text-xs font-medium shadow-xl border border-slate-700/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap items-center gap-2 transform translate-x-1 group-hover:translate-x-0">
-            <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <span className="w-2 h-2 rounded-full bg-orange-400" />
             <span>{!app?.isAuthenticated || !app?.token ? 'Sign in to use Voice' : 'Conversation Closed · Click to Start'}</span>
             <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700">Alt+V</span>
           </div>
 
-          {/* Closed Floating Action Button */}
+          {/* Closed Floating Action Button - SIBLIX Orange */}
           <button
             type="button"
             onClick={handleVoiceButtonClick}
             aria-label="Conversation Closed - Click to start"
             title="Conversation is Closed · Tap or press Alt+V to start conversation"
-            className="relative w-14 h-14 rounded-full bg-slate-900/95 hover:bg-slate-800 border-2 border-slate-700/90 hover:border-orange-500/70 text-slate-300 hover:text-white shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-slate-700/50 cursor-grab active:cursor-grabbing"
+            className="relative w-14 h-14 rounded-full bg-[#FF6B00] hover:bg-[#fa5d00] text-white shadow-[0_8px_24px_rgba(255,107,0,0.38)] flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 cursor-grab active:cursor-grabbing border border-orange-400/40"
           >
             {!app?.isAuthenticated || !app?.token || !app?.username ? (
               <>
-                <MicrophoneSlash weight="bold" size={24} className="text-slate-400 drop-shadow" />
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-slate-700 flex items-center justify-center shadow-md">
+                <MicrophoneSlash weight="bold" size={24} className="text-white drop-shadow" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-white flex items-center justify-center shadow-md">
                   <Lock size={10} weight="bold" />
                 </div>
               </>
             ) : (
               <>
-                <MicrophoneSlash weight="bold" size={24} className="text-slate-300 hover:text-white drop-shadow" />
-                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Off</span>
+                <MicrophoneSlash weight="bold" size={24} className="text-white drop-shadow" />
+                <span className="text-[8px] font-bold uppercase tracking-wider text-orange-100 mt-0.5">Off</span>
               </>
             )}
           </button>
