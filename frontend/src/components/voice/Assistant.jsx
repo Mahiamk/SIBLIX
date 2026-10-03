@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { VoxideClient, VoxideWidget, useVoxideVoice } from '@voxide/react';
-import { Microphone, Lock } from '@phosphor-icons/react';
+import { Microphone, MicrophoneSlash, Lock } from '@phosphor-icons/react';
 import { MessageSquare, Minus, Move, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { generateDiscrepancyBriefingText } from '../../utils/audioBriefing';
@@ -1194,10 +1194,32 @@ export function Assistant() {
     return () => unsubscribe();
   }, []);
 
+  // 0. Ensure Voxide Client is initialized on mount
+  useEffect(() => {
+    if (ai && !ai.isInitialized) {
+      ai.init().catch((err) => {
+        console.error('[SIBLIX Voice] Client init failed:', err);
+      });
+    }
+  }, []);
+
   // 1. LIVE VOICE STATE & SOUND VIBRATION
   const { status: voiceStatus, connect: connectVoice, disconnect: disconnectVoice } = useVoxideVoice(ai);
-  const isVoiceActive = ['connecting', 'listening', 'thinking', 'speaking', 'executing'].includes(voiceStatus);
-  const isListeningOrSpeaking = ['listening', 'speaking'].includes(voiceStatus);
+  
+  // Local state to guarantee instantaneous optimistic UI state changes
+  const [localActive, setLocalActive] = useState(false);
+
+  const isVoiceActive = localActive || ['connecting', 'listening', 'thinking', 'speaking', 'executing'].includes(voiceStatus);
+  const isListeningOrSpeaking = ['listening', 'speaking'].includes(voiceStatus) || (localActive && voiceStatus !== 'idle' && voiceStatus !== 'error');
+
+  // Sync local active state when Voxide reports terminal status
+  useEffect(() => {
+    if (voiceStatus === 'idle' || voiceStatus === 'error') {
+      setLocalActive(false);
+    } else if (['connecting', 'listening', 'thinking', 'speaking', 'executing'].includes(voiceStatus)) {
+      setLocalActive(true);
+    }
+  }, [voiceStatus]);
 
   // Vibration feedback when listening or speaking on supported devices
   useEffect(() => {
@@ -1210,13 +1232,14 @@ export function Assistant() {
 
   // Intercept hands-free hotkey (Alt+V): toggle voice or prompt signin
   useEffect(() => {
-    const handleHotkey = (e) => {
+    const handleHotkey = async (e) => {
       if (e.altKey && (e.key === 'v' || e.key === 'V')) {
         e.preventDefault();
         e.stopImmediatePropagation();
         const currentApp = appBridgeRef.current;
         if (!currentApp?.isAuthenticated || !currentApp?.token || !currentApp?.username) {
           try {
+            setLocalActive(false);
             disconnectVoice();
           } catch {}
           currentApp?.setAuthMode?.('signin');
@@ -1229,19 +1252,31 @@ export function Assistant() {
         }
 
         // Toggle voice
-        if (['connecting', 'listening', 'thinking', 'speaking', 'executing'].includes(ai.status)) {
+        if (isVoiceActive) {
           try {
+            setLocalActive(false);
             disconnectVoice();
-            currentApp?.addToast?.('SIBLIX Voice session paused', 'info');
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try { navigator.vibrate(30); } catch {}
+            }
+            currentApp?.addToast?.('SIBLIX Voice: Conversation closed (Muted)', 'info');
           } catch (err) {
             console.error('Error disconnecting voice:', err);
           }
         } else {
           try {
-            connectVoice();
-            currentApp?.addToast?.('SIBLIX Voice listening...', 'success');
+            setLocalActive(true);
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              try { navigator.vibrate([40, 50, 40]); } catch {}
+            }
+            if (!ai.isInitialized) {
+              await ai.init();
+            }
+            await connectVoice();
+            currentApp?.addToast?.('SIBLIX Voice: Conversation started — listening...', 'success');
           } catch (err) {
             console.error('Error connecting voice:', err);
+            setLocalActive(false);
           }
         }
       }
@@ -1249,7 +1284,7 @@ export function Assistant() {
 
     window.addEventListener('keydown', handleHotkey, true);
     return () => window.removeEventListener('keydown', handleHotkey, true);
-  }, [connectVoice, disconnectVoice]);
+  }, [isVoiceActive, connectVoice, disconnectVoice]);
 
   // 2. DRAGGABLE FLOATING ACTION MIC ("Floating Mut Action Mice")
   const POSITION_STORAGE_KEY = 'siblix_voice_pos';
@@ -1354,7 +1389,7 @@ export function Assistant() {
   };
 
   // Click handler for floating mic
-  const handleVoiceButtonClick = (e) => {
+  const handleVoiceButtonClick = async (e) => {
     if (dragTracker.current.hasMoved) return;
     e.preventDefault();
     e.stopPropagation();
@@ -1362,6 +1397,7 @@ export function Assistant() {
     // Check authentication
     if (!app?.isAuthenticated || !app?.token || !app?.username) {
       try {
+        setLocalActive(false);
         disconnectVoice();
       } catch {}
       app?.setAuthMode?.('signin');
@@ -1372,22 +1408,35 @@ export function Assistant() {
 
     if (isVoiceActive) {
       try {
+        setLocalActive(false);
         disconnectVoice();
-        app?.addToast?.('SIBLIX Voice session paused', 'info');
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try { navigator.vibrate(30); } catch {}
+        }
+        app?.addToast?.('SIBLIX Voice: Conversation closed (Muted)', 'info');
       } catch (err) {
         console.error('Error disconnecting voice:', err);
       }
     } else {
       try {
-        connectVoice();
-        app?.addToast?.('SIBLIX Voice listening...', 'success');
+        setLocalActive(true);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try { navigator.vibrate([40, 50, 40]); } catch {}
+        }
+        if (!ai.isInitialized) {
+          await ai.init();
+        }
+        await connectVoice();
+        app?.addToast?.('SIBLIX Voice: Conversation started — listening...', 'success');
       } catch (err) {
         console.error('Error connecting voice:', err);
+        setLocalActive(false);
+        app?.addToast?.(`Voice connection failed: ${err.message || 'Check microphone'}`, 'error');
       }
     }
   };
 
-  // Pure Floating Draggable Action Mic - NO CONVERSATION RECTANGLE ANYWHERE
+  // Render pure draggable action mic with distinct visual states for Started vs Closed
   return (
     <div
       ref={dragRef}
@@ -1400,79 +1449,119 @@ export function Assistant() {
         zIndex: 2147483647,
         touchAction: 'none',
       }}
-      className={`siblix-voice-draggable select-none ${isDragging ? 'is-dragging' : ''} ${isVoiceActive ? 'voice-active' : ''} ${isListeningOrSpeaking ? 'is-speaking-or-listening' : ''} group`}
+      className={`siblix-voice-draggable select-none ${isDragging ? 'is-dragging' : ''} ${isVoiceActive ? 'voice-active' : 'voice-closed'} ${isListeningOrSpeaking ? 'is-speaking-or-listening' : ''} group`}
     >
       {/* Draggable move pill handle */}
       <div
-        className="siblix-drag-handle absolute -top-3.5 -left-3 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[9px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing pointer-events-auto"
+        className="siblix-drag-handle absolute -top-3.5 -left-3 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[9px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing pointer-events-auto hover:bg-slate-800 transition-colors"
         title="Drag to move anywhere on screen"
       >
         <Move size={9} className="text-orange-400" />
         <span className="font-semibold">Move</span>
       </div>
 
-      {/* Floating Status Pill when Voice is Active */}
-      {isVoiceActive && (
-        <div className="absolute bottom-full mb-2.5 right-0 flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/95 text-white text-[11px] font-medium border border-orange-500/60 shadow-xl backdrop-blur-md pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-200">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B00]" />
+      {/* ============================================================== */}
+      {/* STATE A: CONVERSATION IS STARTED / ACTIVE (LIVE MICE)           */}
+      {/* ============================================================== */}
+      {isVoiceActive ? (
+        <>
+          {/* Attached Status Badge: LIVE */}
+          <span className="absolute -top-2 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-extrabold tracking-wider shadow-lg flex items-center gap-1 animate-pulse pointer-events-none border border-emerald-300/40 z-10">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            LIVE
           </span>
-          <span className="text-slate-100 font-semibold tracking-wide">
-            {voiceStatus === 'listening'
-              ? 'Listening...'
-              : voiceStatus === 'speaking'
-              ? 'Speaking...'
-              : voiceStatus === 'thinking'
-              ? 'Thinking...'
-              : voiceStatus === 'connecting'
-              ? 'Connecting...'
-              : voiceStatus === 'executing'
-              ? 'Processing...'
-              : 'SIBLIX Voice'}
-          </span>
-        </div>
-      )}
 
-      {/* Tooltip on Desktop hover when idle */}
-      {!isVoiceActive && (
-        <div className="hidden sm:flex absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white text-xs font-medium shadow-xl border border-slate-700/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap items-center gap-2 transform translate-x-1 group-hover:translate-x-0">
-          <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-          <span>{!app?.isAuthenticated || !app?.token ? 'Sign in to use Voice' : 'SIBLIX Voice Assistant'}</span>
-          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700">Alt+V</span>
-        </div>
-      )}
+          {/* Prominent Floating Status Pill above button */}
+          <div className="absolute bottom-full mb-3 right-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/95 text-white text-[11px] font-medium border border-orange-500/80 shadow-[0_8px_25px_rgba(255,107,0,0.4)] backdrop-blur-md pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-200">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF6B00]" />
+            </span>
+            <span className="text-slate-100 font-semibold tracking-wide">
+              {voiceStatus === 'listening'
+                ? '🟢 Listening... (Speak now)'
+                : voiceStatus === 'speaking'
+                ? '🔊 SIBLIX Speaking...'
+                : voiceStatus === 'thinking'
+                ? '⚡ SIBLIX Thinking...'
+                : voiceStatus === 'connecting'
+                ? '🟡 Connecting to AI...'
+                : voiceStatus === 'executing'
+                ? '⚙️ Processing...'
+                : '🟢 Conversation Started'}
+            </span>
+            <span className="text-[10px] text-orange-400 font-mono border-l border-slate-700 pl-2">Tap to end</span>
+          </div>
 
-      {/* Floating Action Mic Button */}
-      <button
-        type="button"
-        onClick={handleVoiceButtonClick}
-        aria-label={isVoiceActive ? 'Stop Voice Assistant' : 'Start Voice Assistant'}
-        title={isVoiceActive ? 'Tap to pause voice' : 'Tap to start voice assistant (Drag to move anywhere)'}
-        className="relative w-14 h-14 rounded-full bg-[#FF6B00] hover:bg-[#fa5d00] text-white shadow-[0_8px_28px_rgba(255,107,0,0.45)] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 cursor-grab active:cursor-grabbing"
-      >
-        {/* Soundwave Ripple Vibrations when listening or speaking */}
-        {isListeningOrSpeaking && (
-          <>
-            <span className="absolute -inset-2 rounded-full border-2 border-[#FF6B00] animate-soundwave-1 pointer-events-none" />
-            <span className="absolute -inset-4 rounded-full border border-orange-400 animate-soundwave-2 pointer-events-none" />
-          </>
-        )}
+          {/* Glowing Active Floating Action Mic Button */}
+          <button
+            type="button"
+            onClick={handleVoiceButtonClick}
+            aria-label="Conversation Started - Click to close"
+            title="Conversation is Started · Tap or press Alt+V to close conversation"
+            className="relative w-14 h-14 rounded-full bg-[#FF6B00] hover:bg-[#fa5d00] text-white shadow-[0_0_35px_rgba(255,107,0,0.7)] flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/40 cursor-grab active:cursor-grabbing border-2 border-orange-300/40"
+          >
+            {/* Concentric Soundwave Ripples radiating outward */}
+            <span className="absolute -inset-2.5 rounded-full border-2 border-[#FF6B00] animate-soundwave-1 pointer-events-none" />
+            <span className="absolute -inset-5 rounded-full border border-orange-400 animate-soundwave-2 pointer-events-none" />
 
-        {/* Morph to mic when voice is active or when authenticated */}
-        {isVoiceActive ? (
-          <Microphone weight="fill" size={26} className="text-white animate-mic-vibrate drop-shadow" />
-        ) : !app?.isAuthenticated || !app?.token || !app?.username ? (
-          <>
-            <Microphone weight="bold" size={24} className="text-white drop-shadow opacity-90" />
-            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-white flex items-center justify-center shadow-md">
-              <Lock size={11} weight="bold" />
+            {/* Live Microphone Icon vibrating */}
+            <Microphone weight="fill" size={24} className="text-white animate-mic-vibrate drop-shadow-md" />
+
+            {/* Audio Waveform Equalizer Bars */}
+            <div className="flex items-center gap-0.5 mt-0.5 pointer-events-none">
+              <span className="w-1 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1 h-3 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.25s]" />
+              <span className="w-1 h-1.5 bg-white rounded-full animate-bounce" />
             </div>
-          </>
-        ) : (
-          <Microphone weight="bold" size={25} className="text-white drop-shadow" />
-        )}
-      </button>
+          </button>
+        </>
+      ) : (
+        /* ============================================================== */
+        /* STATE B: CONVERSATION IS CLOSED / OFF (MUTED STANDBY)          */
+        /* ============================================================== */
+        <>
+          {/* Attached Status Badge: OFF */}
+          <span className="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-slate-800 text-[9px] font-bold font-mono text-slate-400 border border-slate-700 shadow flex items-center gap-1 pointer-events-none z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+            OFF
+          </span>
+
+          {/* Desktop Hover Tooltip */}
+          <div className="hidden sm:flex absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white text-xs font-medium shadow-xl border border-slate-700/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap items-center gap-2 transform translate-x-1 group-hover:translate-x-0">
+            <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <span>{!app?.isAuthenticated || !app?.token ? 'Sign in to use Voice' : 'Conversation Closed · Click to Start'}</span>
+            <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700">Alt+V</span>
+          </div>
+
+          {/* Closed Floating Action Button */}
+          <button
+            type="button"
+            onClick={handleVoiceButtonClick}
+            aria-label="Conversation Closed - Click to start"
+            title="Conversation is Closed · Tap or press Alt+V to start conversation"
+            className="relative w-14 h-14 rounded-full bg-slate-900/95 hover:bg-slate-800 border-2 border-slate-700/90 hover:border-orange-500/70 text-slate-300 hover:text-white shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-slate-700/50 cursor-grab active:cursor-grabbing"
+          >
+            {!app?.isAuthenticated || !app?.token || !app?.username ? (
+              <>
+                <MicrophoneSlash weight="bold" size={24} className="text-slate-400 drop-shadow" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-slate-700 flex items-center justify-center shadow-md">
+                  <Lock size={10} weight="bold" />
+                </div>
+              </>
+            ) : (
+              <>
+                <MicrophoneSlash weight="bold" size={24} className="text-slate-300 hover:text-white drop-shadow" />
+                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Off</span>
+              </>
+            )}
+          </button>
+        </>
+      )}
     </div>
   );
 }
