@@ -140,7 +140,7 @@ export function DashboardPage() {
       )}
 
       {/* Hands-Free Voice Triage & Port Field Dispatch Banner */}
-      <div className="bg-gradient-to-r from-brand-50/70 via-slate-100/50 to-emerald-50/50 rounded-2xl border border-brand-200/60 p-4 sm:p-5 shadow-xs">
+      <div className="bg-gradient-to-r from-brand-50/70 via-slate-100/50 to-emerald-50/50 rounded-2xl border border-brand-200/60 p-4 sm:p-5 shadow-xs w-full max-w-full overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-brand-500/20">
@@ -173,7 +173,7 @@ export function DashboardPage() {
         </div>
 
         {/* Multilingual Voice Prompt Quick Chips */}
-        <div className="mt-3.5 pt-3 border-t border-brand-200/40 flex items-center gap-2 flex-wrap text-xs">
+        <div className="mt-3.5 pt-3 border-t border-brand-200/40 flex items-center gap-2 flex-wrap text-xs w-full max-w-full overflow-hidden">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">
             Try Speaking:
           </span>
