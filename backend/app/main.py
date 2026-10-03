@@ -40,7 +40,6 @@ def health():
     return {"status": "ok", "tenant_isolation": "enabled"}
 
 
-@app.get("/")
 @app.get("/api")
 def api_root():
     return {
@@ -106,5 +105,20 @@ app.include_router(superadmin.router)
 # Serve built frontend SPA if running as a standalone container (e.g. EthioDeploy / Docker)
 frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/dist"))
 if not os.environ.get("VERCEL") and os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    class SPAStaticFiles(StaticFiles):
+        async def get_response(self, path: str, scope):
+            try:
+                response = await super().get_response(path, scope)
+                if response.status_code == 404:
+                    return await super().get_response("index.html", scope)
+                return response
+            except Exception:
+                return await super().get_response("index.html", scope)
+
+    app.mount("/", SPAStaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    @app.get("/")
+    def root_fallback():
+        return api_root()
+
 
