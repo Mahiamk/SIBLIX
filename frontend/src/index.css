@@ -116,15 +116,28 @@
   color: #717486 !important;
 }
 
-/* Hide voice assistant completely on mobile screens (< 768px) */
+/* Hide conversation rectangle on mobile screens (< 768px) */
 @media (max-width: 767px) {
-  .siblix-voice-draggable,
-  .vx-enter,
-  [class*="vx-"],
-  .siblix-voice-locked-btn {
+  .vx-enter > div:first-child,
+  .vx-enter [role="dialog"],
+  .vx-scroll,
+  [class*="vx-scroll"] {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
+  }
+}
+
+/* Desktop View: Properly sized conversation rectangle with perfect width and length */
+@media (min-width: 768px) {
+  .siblix-voice-draggable .vx-enter > div:first-child {
+    width: 384px !important;
+    max-width: calc(100vw - 48px) !important;
+    height: 530px !important;
+    max-height: calc(100vh - 120px) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    overflow: hidden !important;
   }
 }
 
@@ -153,9 +166,111 @@
   user-select: none !important;
 }
 
-/* Minimized Mode: collapses panel and shows sleek minimized dock pill */
+/* Minimized Mode: collapses conversation rectangle and shows sleek dock pill */
 .siblix-voice-draggable.is-minimized .vx-enter > div:first-child {
   display: none !important;
 }
+
+/* Soundwave and microphone vibration animations */
+@keyframes soundwavePing {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+@keyframes soundwavePing2 {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes micVibration {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-3.5deg) scale(1.05);
+  }
+  40% {
+    transform: rotate(3.5deg) scale(0.97);
+  }
+  60% {
+    transform: rotate(-2.5deg) scale(1.04);
+  }
+  80% {
+    transform: rotate(2.5deg) scale(0.98);
+  }
+}
+
+.animate-soundwave-1 {
+  animation: soundwavePing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-soundwave-2 {
+  animation: soundwavePing2 1.8s cubic-bezier(0, 0, 0.2, 1) infinite 0.6s;
+}
+
+.animate-mic-vibrate {
+  animation: micVibration 0.8s ease-in-out infinite;
+}
+
+/* Desktop launcher button morph to mic when voice is active */
+.siblix-voice-draggable.voice-active .vx-enter > button:last-child {
+  position: relative !important;
+  background: #FF6B00 !important;
+  box-shadow: 0 0 25px rgba(255, 107, 0, 0.6) !important;
+}
+
+.siblix-voice-draggable.voice-active .vx-enter > button:last-child > svg {
+  opacity: 0 !important;
+}
+
+.siblix-voice-draggable.voice-active .vx-enter > button:last-child::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%23ffffff'%3E%3Cpath d='M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm112,64a8,8,0,0,1-16,0,64,64,0,0,1-128,0,8,8,0,0,1-16,0,80.11,80.11,0,0,0,72,79.6V232a8,8,0,0,1-16,0H88a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16H152a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,0,208,128Z'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 26px 26px;
+  animation: micVibration 0.8s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.siblix-voice-draggable.voice-active .vx-enter > button:last-child::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 107, 0, 0.7);
+  animation: soundwavePing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.siblix-voice-draggable.is-speaking-or-listening .vx-enter > button:last-child::before {
+  animation: soundwavePing 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  border-color: rgba(255, 107, 0, 0.95);
+}
+
 
 
