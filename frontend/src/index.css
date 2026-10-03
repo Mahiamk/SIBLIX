@@ -116,3 +116,46 @@
   color: #717486 !important;
 }
 
+/* Hide voice assistant completely on mobile screens (< 768px) */
+@media (max-width: 767px) {
+  .siblix-voice-draggable,
+  .vx-enter,
+  [class*="vx-"],
+  .siblix-voice-locked-btn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
+/* Draggable Voxide Floating Container */
+.siblix-voice-draggable {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  touch-action: none;
+}
+
+.siblix-voice-draggable .vx-enter {
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  left: auto !important;
+  top: auto !important;
+}
+
+.siblix-voice-draggable .vx-enter button[type="button"]:not([aria-label*="Close"]):not([aria-label*="End"]) {
+  cursor: grab;
+}
+
+.siblix-voice-draggable.is-dragging,
+.siblix-voice-draggable.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+
+/* Minimized Mode: collapses panel and shows sleek minimized dock pill */
+.siblix-voice-draggable.is-minimized .vx-enter > div:first-child {
+  display: none !important;
+}
+
+
