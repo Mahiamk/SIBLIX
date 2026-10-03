@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "build": "(python3 -m venv .venv && .venv/bin/pip install --no-cache-dir -r backend/requirements.txt || true) && npm --prefix frontend install && npm --prefix frontend run build",
     "start": "cd backend && (test -f ../.venv/bin/uvicorn && ../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || test -f /app/.venv/bin/uvicorn && /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || test -f .venv/bin/uvicorn && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000})",
     "dev": "npm --prefix frontend run dev"
   },
