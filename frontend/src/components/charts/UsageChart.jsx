@@ -13,18 +13,41 @@ export function UsageChart({
   const containerRef = useRef(null);
   const svgRef = useRef(null);
   const [tooltip, setTooltip] = useState(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(containerRef.current);
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current || !data || data.length === 0) return;
 
-    const width = containerRef.current.clientWidth || 500;
+    const width = containerWidth || containerRef.current.clientWidth || 320;
     const margin = { top: 16, right: 16, bottom: 28, left: 36 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const innerWidth = Math.max(10, width - margin.left - margin.right);
+    const innerHeight = Math.max(10, height - margin.top - margin.bottom);
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
-    svg.attr('width', width).attr('height', height);
+    svg
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('width', '100%')
+      .attr('height', height)
+      .style('max-width', '100%')
+      .style('overflow', 'hidden');
 
     const g = svg
       .append('g')
@@ -213,7 +236,7 @@ export function UsageChart({
         focusLine.style('opacity', 0);
         setTooltip(null);
       });
-  }, [data, height]);
+  }, [data, height, containerWidth]);
 
   // Dynamic edge-aware positioning to prevent underlapping or clipping on right/left boundaries
   const isNearRight = tooltip && tooltip.containerWidth && tooltip.x > (tooltip.containerWidth - 120);
