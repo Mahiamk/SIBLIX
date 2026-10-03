@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { VoxideClient, VoxideWidget } from '@voxide/react';
+import { VoxideClient, VoxideWidget, useVoxideVoice } from '@voxide/react';
 import { Microphone, Lock } from '@phosphor-icons/react';
 import { MessageSquare, Minus, Move, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -1235,7 +1235,21 @@ export function Assistant() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2. DRAGGABLE FLOATING ACTION MIC ("Floating Mut Action Mice")
+  // 2. LIVE VOICE STATE & SOUND VIBRATION
+  const { status: voiceStatus, connect: connectVoice, disconnect: disconnectVoice } = useVoxideVoice(ai);
+  const isVoiceActive = ['connecting', 'listening', 'thinking', 'speaking', 'executing'].includes(voiceStatus);
+  const isListeningOrSpeaking = ['listening', 'speaking'].includes(voiceStatus);
+
+  // Vibration feedback when listening or speaking on supported devices
+  useEffect(() => {
+    if (isListeningOrSpeaking && typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate([35, 45, 35]);
+      } catch {}
+    }
+  }, [voiceStatus, isListeningOrSpeaking]);
+
+  // 3. DRAGGABLE FLOATING ACTION MIC ("Floating Mut Action Mice")
   const POSITION_STORAGE_KEY = 'siblix_voice_pos';
   const getInitialPosition = useCallback(() => {
     if (typeof window === 'undefined') return { x: 0, y: 0 };
@@ -1285,6 +1299,16 @@ export function Assistant() {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     const tag = e.target.tagName?.toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'a') return;
+
+    // Do not drag if user is scrolling inside chat panel or clicking chat buttons/actions
+    if (
+      e.target.closest('.vx-scroll') ||
+      e.target.closest('.siblix-minimize-btn') ||
+      e.target.closest('[role="dialog"] button') ||
+      e.target.closest('button[aria-label*="Close"]')
+    ) {
+      return;
+    }
 
     const currentX = position.x ?? (window.innerWidth - 84);
     const currentY = position.y ?? (window.innerHeight - 84);
@@ -1338,7 +1362,7 @@ export function Assistant() {
     }
   };
 
-  // 3. MINIMIZE / EXPAND FUNCTIONALITY
+  // 4. MINIMIZE / EXPAND FUNCTIONALITY
   const [isMinimized, setIsMinimized] = useState(false);
 
   // MutationObserver: dynamically inject Minimize button into the Voxide panel header
@@ -1393,7 +1417,7 @@ export function Assistant() {
     e.preventDefault();
     e.stopPropagation();
     try {
-      ai.disconnect();
+      disconnectVoice();
     } catch { }
     app?.setAuthMode?.('signin');
     app?.setAuthModalOpen?.(true);
@@ -1403,12 +1427,120 @@ export function Assistant() {
     );
   };
 
-  // If mobile view, do NOT render popup at all
+  // Mobile Floating Mic action handler
+  const handleMobileVoiceClick = (e) => {
+    if (dragTracker.current.hasMoved) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check auth
+    if (!app?.isAuthenticated || !app?.token || !app?.username) {
+      try {
+        disconnectVoice();
+      } catch {}
+      app?.setAuthMode?.('signin');
+      app?.setAuthModalOpen?.(true);
+      app?.addToast?.('Please sign in to use SIBLIX Voice Assistant.', 'info');
+      return;
+    }
+
+    if (isVoiceActive) {
+      try {
+        disconnectVoice();
+        app?.addToast?.('Voice session disconnected', 'info');
+      } catch (err) {
+        console.error('Error disconnecting voice:', err);
+      }
+    } else {
+      try {
+        connectVoice();
+        app?.addToast?.('SIBLIX Voice listening...', 'success');
+      } catch (err) {
+        console.error('Error connecting voice:', err);
+      }
+    }
+  };
+
+  // MOBILE VIEW: Do NOT render conversation rectangle at all!
+  // Only render the floating draggable mic button that morphs into mice with vibration soundwaves
   if (isMobile) {
-    return null;
+    return (
+      <div
+        ref={dragRef}
+        onPointerDown={handlePointerDown}
+        onClickCapture={handleCaptureClick}
+        style={{
+          position: 'fixed',
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          zIndex: 2147483647,
+          touchAction: 'none',
+        }}
+        className={`siblix-voice-draggable select-none ${isDragging ? 'is-dragging' : ''} ${isVoiceActive ? 'voice-active' : ''} ${isListeningOrSpeaking ? 'is-speaking-or-listening' : ''} group`}
+      >
+        {/* Move handle pill */}
+        <div
+          className="siblix-drag-handle absolute -top-3.5 -left-3 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[9px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing pointer-events-auto"
+          title="Drag to move anywhere"
+        >
+          <Move size={9} className="text-orange-400" />
+          <span className="font-semibold">Move</span>
+        </div>
+
+        {/* Live speech / status badge when active on mobile */}
+        {isVoiceActive && (
+          <div className="absolute bottom-full mb-2 right-0 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/95 text-white text-[11px] font-medium border border-orange-500/60 shadow-xl backdrop-blur-md pointer-events-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-200">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B00]" />
+            </span>
+            <span className="text-slate-200 font-semibold">
+              {voiceStatus === 'listening'
+                ? 'Listening...'
+                : voiceStatus === 'speaking'
+                ? 'Speaking...'
+                : voiceStatus === 'thinking'
+                ? 'Thinking...'
+                : 'SIBLIX Voice'}
+            </span>
+          </div>
+        )}
+
+        {/* Floating Action Button */}
+        <button
+          type="button"
+          onClick={handleMobileVoiceClick}
+          aria-label={isVoiceActive ? 'Stop Voice Assistant' : 'Start Voice Assistant'}
+          title={isVoiceActive ? 'Tap to end voice' : 'Tap to start voice assistant (Drag to move)'}
+          className="relative w-14 h-14 rounded-full bg-[#FF6B00] text-white shadow-[0_8px_28px_rgba(255,107,0,0.45)] flex items-center justify-center transition-transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 cursor-grab active:cursor-grabbing"
+        >
+          {/* Vibration Soundwave Ripples when listening or speaking */}
+          {isListeningOrSpeaking && (
+            <>
+              <span className="absolute -inset-2 rounded-full border-2 border-[#FF6B00] animate-soundwave-1 pointer-events-none" />
+              <span className="absolute -inset-4 rounded-full border border-orange-400 animate-soundwave-2 pointer-events-none" />
+            </>
+          )}
+
+          {/* Morph to mic when conversation is started */}
+          {isVoiceActive ? (
+            <Microphone weight="fill" size={26} className="text-white animate-mic-vibrate drop-shadow" />
+          ) : !app?.isAuthenticated || !app?.token || !app?.username ? (
+            <>
+              <MessageSquare size={24} strokeWidth={2.2} className="text-white" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-white flex items-center justify-center shadow-md">
+                <Lock size={11} weight="bold" />
+              </div>
+            </>
+          ) : (
+            <Microphone weight="bold" size={25} className="text-white drop-shadow" />
+          )}
+        </button>
+      </div>
+    );
   }
 
-  // If user is unauthenticated, render the locked floating Voxide launcher button in draggable wrapper
+  // DESKTOP VIEW: If user is unauthenticated, render the locked floating Voxide launcher button in draggable wrapper
   if (!app?.isAuthenticated || !app?.token || !app?.username) {
     return (
       <div
@@ -1420,12 +1552,13 @@ export function Assistant() {
           left: `${position.x}px`,
           top: `${position.y}px`,
           zIndex: 2147483647,
+          touchAction: 'none',
         }}
         className={`siblix-voice-draggable select-none ${isDragging ? 'is-dragging' : ''} group`}
       >
         {/* Drag grip cue */}
         <div
-          className="absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
+          className="siblix-drag-handle absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
           title="Drag to move anywhere on screen"
         >
           <Move size={10} className="text-orange-400" />
@@ -1456,7 +1589,7 @@ export function Assistant() {
     );
   }
 
-  // Render VoxideWidget inside Draggable & Minimizable Container
+  // DESKTOP VIEW: Render VoxideWidget inside Draggable & Minimizable Container
   return (
     <div
       ref={dragRef}
@@ -1469,12 +1602,13 @@ export function Assistant() {
         zIndex: 2147483647,
         flexDirection: isTopHalf ? 'column-reverse' : 'column',
         alignItems: isLeftHalf ? 'flex-start' : 'flex-end',
+        touchAction: 'none',
       }}
-      className={`siblix-voice-draggable flex select-none ${isDragging ? 'is-dragging' : ''} ${isMinimized ? 'is-minimized' : ''} group`}
+      className={`siblix-voice-draggable flex select-none ${isDragging ? 'is-dragging' : ''} ${isMinimized ? 'is-minimized' : ''} ${isVoiceActive ? 'voice-active' : ''} ${isListeningOrSpeaking ? 'is-speaking-or-listening' : ''} group`}
     >
       {/* Drag grip cue */}
       <div
-        className="absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
+        className="siblix-drag-handle absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
         title="Drag to move floating mic anywhere on screen"
       >
         <Move size={10} className="text-orange-400" />
@@ -1488,7 +1622,9 @@ export function Assistant() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B00]"></span>
           </span>
-          <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">Voice Minimized</span>
+          <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
+            {isVoiceActive ? 'Voice Active · Minimized' : 'Voice Minimized'}
+          </span>
           <button
             type="button"
             onClick={(e) => {
