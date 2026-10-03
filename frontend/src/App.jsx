@@ -152,7 +152,7 @@ export function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas-light selection:bg-brand-100 selection:text-brand-900 font-sans">
+    <div className="min-h-screen bg-canvas-light selection:bg-brand-100 selection:text-brand-900 font-sans w-full max-w-full overflow-x-hidden">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
@@ -162,7 +162,7 @@ export function AppContent() {
 
       {/* Content column — offset by the rail on lg+, full width below it */}
       <div
-        className="flex flex-col min-h-screen transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-w)]"
+        className="flex flex-col min-h-screen transition-[padding] duration-200 ease-out lg:pl-[var(--sidebar-w)] w-full max-w-full overflow-x-hidden"
         style={{
           '--sidebar-w': `${sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH}px`,
         }}
@@ -175,13 +175,13 @@ export function AppContent() {
         {/* Live Ingestion Progress Drawer / Banner (Operators only) */}
         {!isSuperAdmin && <PipelineProgressBanner />}
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 xl:px-12 py-6 sm:py-8">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3.5 sm:px-8 lg:px-10 xl:px-12 py-5 sm:py-8 w-full max-w-full overflow-x-hidden">
           {renderAppView()}
         </main>
 
         {/* Workspace Footer */}
-        <footer className="border-t border-slate-200/80 bg-white/60 py-4 text-center text-xs text-slate-400">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <footer className="border-t border-slate-200/80 bg-white/60 py-4 text-center text-xs text-slate-400 w-full max-w-full">
+          <div className="max-w-7xl mx-auto px-3.5 sm:px-8 lg:px-10 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2">
             {isSuperAdmin ? (
               <>
                 <span>
