@@ -1365,6 +1365,26 @@ export function Assistant() {
   // 4. MINIMIZE / EXPAND FUNCTIONALITY
   const [isMinimized, setIsMinimized] = useState(false);
 
+  // Directly apply display: none / display: flex on the panel DOM element whenever isMinimized changes
+  useEffect(() => {
+    if (!dragRef.current) return;
+    const container = dragRef.current;
+
+    const panel = container.querySelector('.vx-enter > div:not(:last-child)') ||
+                  container.querySelector('[data-siblix-panel="true"]');
+
+    if (panel) {
+      panel.setAttribute('data-siblix-panel', 'true');
+      if (isMinimized) {
+        panel.style.setProperty('display', 'none', 'important');
+        panel.classList.add('siblix-panel-hidden');
+      } else {
+        panel.style.removeProperty('display');
+        panel.classList.remove('siblix-panel-hidden');
+      }
+    }
+  }, [isMinimized]);
+
   // MutationObserver: dynamically inject Minimize button into the Voxide panel header
   useEffect(() => {
     if (!dragRef.current) return;
@@ -1372,6 +1392,19 @@ export function Assistant() {
 
     const observer = new MutationObserver(() => {
       const closeBtn = container.querySelector('button[aria-label="Close chat"]');
+      const panel = container.querySelector('.vx-enter > div:not(:last-child)') ||
+                    (closeBtn ? closeBtn.closest('.vx-enter > div') : null);
+
+      if (panel) {
+        panel.setAttribute('data-siblix-panel', 'true');
+        if (isMinimized) {
+          panel.style.setProperty('display', 'none', 'important');
+          panel.classList.add('siblix-panel-hidden');
+        } else {
+          panel.style.removeProperty('display');
+          panel.classList.remove('siblix-panel-hidden');
+        }
+      }
 
       if (closeBtn && !container.querySelector('.siblix-minimize-btn')) {
         const minBtn = document.createElement('button');
@@ -1396,6 +1429,12 @@ export function Assistant() {
           evt.preventDefault();
           evt.stopPropagation();
           setIsMinimized(true);
+          const p = panel || container.querySelector('.vx-enter > div:not(:last-child)');
+          if (p) {
+            p.setAttribute('data-siblix-panel', 'true');
+            p.style.setProperty('display', 'none', 'important');
+            p.classList.add('siblix-panel-hidden');
+          }
         };
         if (closeBtn.parentNode) {
           closeBtn.parentNode.insertBefore(minBtn, closeBtn);
@@ -1405,7 +1444,7 @@ export function Assistant() {
 
     observer.observe(container, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, []);
+  }, [isMinimized]);
 
   // Determine directional panel placement based on screen position
   const isTopHalf = position.y !== null && position.y < 460;
@@ -1630,6 +1669,12 @@ export function Assistant() {
             onClick={(e) => {
               e.stopPropagation();
               setIsMinimized(false);
+              const panel = dragRef.current?.querySelector('[data-siblix-panel="true"]') ||
+                            dragRef.current?.querySelector('.vx-enter > div:not(:last-child)');
+              if (panel) {
+                panel.style.removeProperty('display');
+                panel.classList.remove('siblix-panel-hidden');
+              }
             }}
             className="px-2 py-0.5 rounded bg-[#FF6B00] hover:bg-[#fa5d00] text-white text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
             title="Expand voice assistant panel"
@@ -1640,7 +1685,19 @@ export function Assistant() {
       )}
 
       {/* VoxideWidget */}
-      <div onClick={() => isMinimized && setIsMinimized(false)}>
+      <div
+        onClick={() => {
+          if (isMinimized) {
+            setIsMinimized(false);
+            const panel = dragRef.current?.querySelector('[data-siblix-panel="true"]') ||
+                          dragRef.current?.querySelector('.vx-enter > div:not(:last-child)');
+            if (panel) {
+              panel.style.removeProperty('display');
+              panel.classList.remove('siblix-panel-hidden');
+            }
+          }
+        }}
+      >
         <VoxideWidget client={ai} accentColor={app.isSuperAdmin ? '#717486' : '#FF6B00'} />
       </div>
     </div>
