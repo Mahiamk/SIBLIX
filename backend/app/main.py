@@ -30,11 +30,6 @@ app.add_middleware(
 )
 
 
-# Serve built frontend SPA if it exists
-frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend/dist"))
-if os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-
 @app.on_event("startup")
 def on_startup():
     init_db()
@@ -107,3 +102,9 @@ app.include_router(profile.router)
 app.include_router(shipments.router)
 app.include_router(audit.router)
 app.include_router(superadmin.router)
+
+# Serve built frontend SPA if running as a standalone container (e.g. EthioDeploy / Docker)
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/dist"))
+if not os.environ.get("VERCEL") and os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+
