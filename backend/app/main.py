@@ -4,12 +4,16 @@ main.py — FastAPI application entrypoint.
 Modular monolith: routers per domain (emails/documents/comparison/reviews/
 evaluation) all import from the same services/ layer, no microservices.
 """
+import os
+from fastapi.staticfiles import StaticFiles
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.connection import init_db
 from app.api import (auth, emails, documents, comparison, reviews, evaluation,
                      email_accounts, profile, shipments, audit, superadmin)
+
 
 app = FastAPI(
     title="AI Shipping Document Verification Platform",
@@ -25,6 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Serve built frontend SPA if it exists
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend/dist"))
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
 
 @app.on_event("startup")
 def on_startup():
