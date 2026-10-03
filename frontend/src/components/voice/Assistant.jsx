@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { VoxideClient, VoxideWidget } from '@voxide/react';
 import { Microphone, Lock } from '@phosphor-icons/react';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Minus, Move, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { generateDiscrepancyBriefingText } from '../../utils/audioBriefing';
 
@@ -1219,8 +1219,177 @@ export function Assistant() {
     return () => window.removeEventListener('keydown', handleHotkey, true);
   }, []);
 
+  // 1. MOBILE DETECTION: Do NOT show voice assistant popup on mobile screens (< 768px)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 2. DRAGGABLE FLOATING ACTION MIC ("Floating Mut Action Mice")
+  const POSITION_STORAGE_KEY = 'siblix_voice_pos';
+  const getInitialPosition = useCallback(() => {
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    try {
+      const saved = localStorage.getItem(POSITION_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          const maxX = Math.max(12, window.innerWidth - 80);
+          const maxY = Math.max(12, window.innerHeight - 80);
+          return {
+            x: Math.min(maxX, Math.max(12, parsed.x)),
+            y: Math.min(maxY, Math.max(12, parsed.y)),
+          };
+        }
+      }
+    } catch {}
+    return {
+      x: Math.max(12, window.innerWidth - 84),
+      y: Math.max(12, window.innerHeight - 84),
+    };
+  }, []);
+
+  const [position, setPosition] = useState(getInitialPosition);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef(null);
+  const dragTracker = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0, hasMoved: false });
+
+  // Keep floating mic within screen bounds on window resize
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setPosition((cur) => {
+        const maxX = Math.max(12, window.innerWidth - 80);
+        const maxY = Math.max(12, window.innerHeight - 80);
+        return {
+          x: Math.min(maxX, Math.max(12, cur.x)),
+          y: Math.min(maxY, Math.max(12, cur.y)),
+        };
+      });
+    };
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, []);
+
+  const handlePointerDown = (e) => {
+    // Only handle primary button clicks
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const tag = e.target.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'a') return;
+
+    const currentX = position.x ?? (window.innerWidth - 84);
+    const currentY = position.y ?? (window.innerHeight - 84);
+
+    dragTracker.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: currentX,
+      initialY: currentY,
+      hasMoved: false,
+    };
+
+    const handlePointerMove = (moveEvt) => {
+      const dx = moveEvt.clientX - dragTracker.current.startX;
+      const dy = moveEvt.clientY - dragTracker.current.startY;
+      if (!dragTracker.current.hasMoved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        dragTracker.current.hasMoved = true;
+        setIsDragging(true);
+      }
+      if (dragTracker.current.hasMoved) {
+        const maxX = Math.max(12, window.innerWidth - 76);
+        const maxY = Math.max(12, window.innerHeight - 76);
+        const newX = Math.min(maxX, Math.max(12, dragTracker.current.initialX + dx));
+        const newY = Math.min(maxY, Math.max(12, dragTracker.current.initialY + dy));
+        setPosition({ x: newX, y: newY });
+      }
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      if (dragTracker.current.hasMoved) {
+        setTimeout(() => setIsDragging(false), 50);
+        setPosition((cur) => {
+          try {
+            localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(cur));
+          } catch {}
+          return cur;
+        });
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handleCaptureClick = (e) => {
+    if (dragTracker.current.hasMoved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  // 3. MINIMIZE / EXPAND FUNCTIONALITY
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  // MutationObserver: dynamically inject Minimize button into the Voxide panel header
+  useEffect(() => {
+    if (!dragRef.current) return;
+    const container = dragRef.current;
+
+    const observer = new MutationObserver(() => {
+      const closeBtn = container.querySelector('button[aria-label="Close chat"]');
+
+      if (closeBtn && !container.querySelector('.siblix-minimize-btn')) {
+        const minBtn = document.createElement('button');
+        minBtn.type = 'button';
+        minBtn.setAttribute('aria-label', 'Minimize assistant');
+        minBtn.title = 'Minimize assistant panel';
+        minBtn.className = 'siblix-minimize-btn';
+        minBtn.style.padding = '6px';
+        minBtn.style.borderRadius = '8px';
+        minBtn.style.border = 'none';
+        minBtn.style.background = 'transparent';
+        minBtn.style.color = 'inherit';
+        minBtn.style.cursor = 'pointer';
+        minBtn.style.display = 'flex';
+        minBtn.style.alignItems = 'center';
+        minBtn.style.justifyContent = 'center';
+        minBtn.style.transition = 'opacity 0.2s';
+        minBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+        minBtn.onmouseenter = () => { minBtn.style.opacity = '0.7'; };
+        minBtn.onmouseleave = () => { minBtn.style.opacity = '1'; };
+        minBtn.onclick = (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          setIsMinimized(true);
+        };
+        if (closeBtn.parentNode) {
+          closeBtn.parentNode.insertBefore(minBtn, closeBtn);
+        }
+      }
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  // Determine directional panel placement based on screen position
+  const isTopHalf = position.y !== null && position.y < 460;
+  const isLeftHalf = position.x !== null && position.x < 420;
+
   // Locked floating action button handler
   const handleLockedClick = (e) => {
+    if (dragTracker.current.hasMoved) return;
     e.preventDefault();
     e.stopPropagation();
     try {
@@ -1234,10 +1403,35 @@ export function Assistant() {
     );
   };
 
-  // If user is unauthenticated, render the locked floating Voxide launcher button
+  // If mobile view, do NOT render popup at all
+  if (isMobile) {
+    return null;
+  }
+
+  // If user is unauthenticated, render the locked floating Voxide launcher button in draggable wrapper
   if (!app?.isAuthenticated || !app?.token || !app?.username) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 flex items-center group">
+      <div
+        ref={dragRef}
+        onPointerDown={handlePointerDown}
+        onClickCapture={handleCaptureClick}
+        style={{
+          position: 'fixed',
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          zIndex: 2147483647,
+        }}
+        className={`siblix-voice-draggable select-none ${isDragging ? 'is-dragging' : ''} group`}
+      >
+        {/* Drag grip cue */}
+        <div
+          className="absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
+          title="Drag to move anywhere on screen"
+        >
+          <Move size={10} className="text-orange-400" />
+          <span className="text-[9px] font-medium tracking-tight">Move</span>
+        </div>
+
         {/* Tooltip on hover */}
         <div className="absolute right-full mr-3.5 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white text-xs font-medium shadow-xl border border-slate-700/80 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap flex items-center gap-2 transform translate-x-1 group-hover:translate-x-0">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -1245,18 +1439,15 @@ export function Assistant() {
           <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-400 border border-slate-700">Alt+V</span>
         </div>
 
-        {/* Floating Voxide Button (Exact Orange Launcher with Locked Badge) */}
+        {/* Floating Voxide Button */}
         <button
           type="button"
           onClick={handleLockedClick}
           aria-label="Voice Assistant - Click to sign in"
-          title="Sign in to use SIBLIX Voice Assistant"
-          className="relative w-14 h-14 rounded-full bg-[#FF6B00] hover:bg-[#fa5d00] text-white shadow-[0_8px_24px_rgba(255,107,0,0.38)] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 cursor-pointer"
+          title="Sign in to use SIBLIX Voice Assistant (Drag to move)"
+          className="relative w-14 h-14 rounded-full bg-[#FF6B00] hover:bg-[#fa5d00] text-white shadow-[0_8px_24px_rgba(255,107,0,0.38)] flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 cursor-grab active:cursor-grabbing"
         >
-          {/* White Chat Speech Bubble Icon matching Voxide launcher exactly */}
           <MessageSquare size={24} strokeWidth={2.2} className="text-white" />
-
-          {/* Locked Badge */}
           <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-900 text-white border-2 border-white flex items-center justify-center shadow-md">
             <Lock size={11} weight="bold" />
           </div>
@@ -1265,8 +1456,60 @@ export function Assistant() {
     );
   }
 
-  // Render VoxideWidget passing user-specific theme color: Storm Grey (#717486) for Super Admin, Bright Orange (#FF6B00) for Operations
-  return <VoxideWidget client={ai} accentColor={app.isSuperAdmin ? '#717486' : '#FF6B00'} />;
+  // Render VoxideWidget inside Draggable & Minimizable Container
+  return (
+    <div
+      ref={dragRef}
+      onPointerDown={handlePointerDown}
+      onClickCapture={handleCaptureClick}
+      style={{
+        position: 'fixed',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        zIndex: 2147483647,
+        flexDirection: isTopHalf ? 'column-reverse' : 'column',
+        alignItems: isLeftHalf ? 'flex-start' : 'flex-end',
+      }}
+      className={`siblix-voice-draggable flex select-none ${isDragging ? 'is-dragging' : ''} ${isMinimized ? 'is-minimized' : ''} group`}
+    >
+      {/* Drag grip cue */}
+      <div
+        className="absolute -top-3.5 -left-3.5 px-1.5 py-0.5 rounded-md bg-slate-900/90 text-slate-300 text-[10px] font-mono shadow-md border border-slate-700/80 flex items-center gap-0.5 cursor-grab active:cursor-grabbing hover:bg-slate-800 transition-colors pointer-events-auto"
+        title="Drag to move floating mic anywhere on screen"
+      >
+        <Move size={10} className="text-orange-400" />
+        <span className="text-[9px] font-medium tracking-tight">Move</span>
+      </div>
+
+      {/* Minimized Dock Bar */}
+      {isMinimized && (
+        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-900/95 text-white border border-slate-700/80 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-md mb-2 pointer-events-auto select-none animate-in fade-in zoom-in-95 duration-200">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF6B00]"></span>
+          </span>
+          <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">Voice Minimized</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMinimized(false);
+            }}
+            className="px-2 py-0.5 rounded bg-[#FF6B00] hover:bg-[#fa5d00] text-white text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+            title="Expand voice assistant panel"
+          >
+            Expand ↗
+          </button>
+        </div>
+      )}
+
+      {/* VoxideWidget */}
+      <div onClick={() => isMinimized && setIsMinimized(false)}>
+        <VoxideWidget client={ai} accentColor={app.isSuperAdmin ? '#717486' : '#FF6B00'} />
+      </div>
+    </div>
+  );
+
 }
 
 export default Assistant;
