@@ -3,18 +3,16 @@ nixPkgs = ["python312", "nodejs_22"]
 
 [phases.install]
 cmds = [
-  "python3 -m venv /opt/venv",
-  "/opt/venv/bin/pip install --upgrade pip",
-  "/opt/venv/bin/pip install -r backend/requirements.txt",
+  "python3 -m venv .venv",
+  ".venv/bin/pip install --upgrade pip",
+  ".venv/bin/pip install --no-cache-dir -r backend/requirements.txt",
   "npm --prefix frontend install"
 ]
-paths = ["/opt/venv/bin"]
 
 [phases.build]
 cmds = [
   "npm --prefix frontend run build"
 ]
-paths = ["/opt/venv/bin"]
 
 [start]
-cmd = "cd backend && (test -f /opt/venv/bin/uvicorn && /opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000})"
+cmd = "cd backend && (test -f ../.venv/bin/uvicorn && ../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || test -f /app/.venv/bin/uvicorn && /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || test -f .venv/bin/uvicorn && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} || uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000})"
