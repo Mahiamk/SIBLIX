@@ -29,6 +29,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Strip /api prefix so /api/* routes match backend endpoints (e.g. /api/auth/login -> /auth/login)
+@app.middleware("http")
+async def handle_api_prefix(request, call_next):
+    path = request.scope.get("path", "")
+    if path.startswith("/api/"):
+        request.scope["path"] = path[4:]
+    return await call_next(request)
+
+
 
 @app.on_event("startup")
 def on_startup():
@@ -105,20 +114,26 @@ app.include_router(superadmin.router)
 # Serve built frontend SPA if running as a standalone container (e.g. EthioDeploy / Docker)
 frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/dist"))
 if not os.environ.get("VERCEL") and os.path.exists(frontend_dist):
+    STATIC_EXTS = {".js", ".css", ".png", ".jpg", ".jpeg", ".svg", ".ico", ".json", ".map", ".woff", ".woff2", ".ttf", ".webp"}
+
     class SPAStaticFiles(StaticFiles):
         async def get_response(self, path: str, scope):
             try:
                 response = await super().get_response(path, scope)
                 if response.status_code == 404:
-                    return await super().get_response("index.html", scope)
+                    if not any(path.endswith(ext) for ext in STATIC_EXTS):
+                        return await super().get_response("index.html", scope)
                 return response
             except Exception:
-                return await super().get_response("index.html", scope)
+                if not any(path.endswith(ext) for ext in STATIC_EXTS):
+                    return await super().get_response("index.html", scope)
+                raise
 
     app.mount("/", SPAStaticFiles(directory=frontend_dist, html=True), name="frontend")
 else:
     @app.get("/")
     def root_fallback():
         return api_root()
+
 
 
