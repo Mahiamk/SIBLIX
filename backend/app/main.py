@@ -6,6 +6,7 @@ evaluation) all import from the same services/ layer, no microservices.
 """
 import os
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,8 @@ from app.database.connection import init_db
 from app.api import (auth, emails, documents, comparison, reviews, evaluation,
                      email_accounts, profile, shipments, audit, superadmin)
 
+
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/dist"))
 
 app = FastAPI(
     title="AI Shipping Document Verification Platform",
@@ -30,12 +33,27 @@ app.add_middleware(
 )
 
 # Strip /api prefix so /api/* routes match backend endpoints (e.g. /api/auth/login -> /auth/login)
+# And intercept browser page navigations (Accept: text/html) so refreshing on /dashboard, /reviews, etc.
+# serves index.html instead of hitting backend API endpoints without auth tokens.
 @app.middleware("http")
 async def handle_api_prefix(request, call_next):
     path = request.scope.get("path", "")
+    
+    # 1. Strip /api prefix for API routes
     if path.startswith("/api/"):
         request.scope["path"] = path[4:]
+        return await call_next(request)
+
+    # 2. Browser page navigation (refreshing on /dashboard, /reviews, etc.)
+    if request.method == "GET" and not os.environ.get("VERCEL"):
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept and path not in ["/docs", "/redoc", "/openapi.json"]:
+            index_path = os.path.join(frontend_dist, "index.html")
+            if os.path.exists(index_path):
+                return FileResponse(index_path)
+
     return await call_next(request)
+
 
 
 
