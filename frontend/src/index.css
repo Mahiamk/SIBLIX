@@ -120,10 +120,14 @@
 
 /* Hide conversation rectangle on mobile screens (< 768px) */
 @media (max-width: 767px) {
-  .vx-enter > div:first-child,
+  .vx-enter > div:not(:last-child),
+  .vx-enter div:has(.siblix-minimize-btn),
+  .vx-enter div:has(.vx-scroll),
   .vx-enter [role="dialog"],
   .vx-scroll,
-  [class*="vx-scroll"] {
+  [class*="vx-scroll"],
+  .siblix-panel-hidden,
+  [data-siblix-panel="true"] {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -132,7 +136,9 @@
 
 /* Desktop View: Properly sized conversation rectangle with perfect width and length */
 @media (min-width: 768px) {
-  .siblix-voice-draggable .vx-enter > div:first-child {
+  .siblix-voice-draggable .vx-enter > div:not(:last-child),
+  .siblix-voice-draggable .vx-enter div:has(.siblix-minimize-btn),
+  .siblix-voice-draggable [data-siblix-panel="true"] {
     width: 384px !important;
     max-width: calc(100vw - 48px) !important;
     height: 530px !important;
@@ -169,8 +175,23 @@
 }
 
 /* Minimized Mode: collapses conversation rectangle and shows sleek dock pill */
-.siblix-voice-draggable.is-minimized .vx-enter > div:first-child {
+.siblix-voice-draggable.is-minimized .vx-enter > div:not(:last-child),
+.siblix-voice-draggable.is-minimized .vx-enter div:has(.siblix-minimize-btn),
+.siblix-voice-draggable.is-minimized .vx-enter div:has(.vx-scroll),
+.siblix-voice-draggable.is-minimized .vx-enter div:has(button[aria-label="Close chat"]),
+.siblix-voice-draggable.is-minimized [data-siblix-panel="true"],
+.siblix-panel-hidden {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Soundwave and microphone vibration animations */
