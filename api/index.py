@@ -31,14 +31,9 @@ from app.main import app
 from fastapi.responses import JSONResponse
 import traceback
 
-# Strip /api prefix if the request arrived through /api/... routing
+# Error logging middleware for Vercel Serverless requests
 @app.middleware("http")
-async def handle_api_prefix(request, call_next):
-    path = request.scope.get("path", "")
-    if path == "/api":
-        request.scope["path"] = "/"
-    elif path.startswith("/api/"):
-        request.scope["path"] = path[4:]
+async def vercel_exception_logging(request, call_next):
     try:
         return await call_next(request)
     except Exception as exc:
@@ -48,3 +43,4 @@ async def handle_api_prefix(request, call_next):
             status_code=500,
             content={"detail": f"Internal Server Error: {str(exc)}", "type": type(exc).__name__},
         )
+
