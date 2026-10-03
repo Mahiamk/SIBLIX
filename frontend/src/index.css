@@ -12,6 +12,8 @@
     background-color: #F8F9FA;
     color: #0F172A;
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 }
 
