@@ -17,9 +17,33 @@ from app.models.discrepancy import ComparisonResult
 from app.services import normalizer as norm
 from app.services.pipeline import process_email
 
-STORAGE_ROOT = os.environ.get(
-    "STORAGE_ROOT", os.path.join(os.path.dirname(__file__), "..", "..", "storage")
-)
+def resolve_storage_root(override_path: Optional[str] = None) -> str:
+    """Robustly resolve the storage root containing 'inbox' and 'attachments'."""
+    candidates = []
+    if override_path:
+        candidates.append(os.path.abspath(override_path))
+        candidates.append(override_path)
+
+    env_val = os.environ.get("STORAGE_ROOT")
+    if env_val:
+        candidates.append(os.path.abspath(env_val))
+        backend_base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        candidates.append(os.path.abspath(os.path.join(backend_base, env_val.lstrip("./"))))
+        candidates.append(env_val)
+
+    backend_default = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage"))
+    candidates.append(backend_default)
+    candidates.append(os.path.abspath("backend/storage"))
+    candidates.append(os.path.abspath("storage"))
+
+    for path in candidates:
+        if path and os.path.exists(os.path.join(path, "inbox")):
+            return os.path.abspath(path)
+
+    return backend_default
+
+
+STORAGE_ROOT = resolve_storage_root()
 
 
 def process_email_job(session: Session, email_id: str):
@@ -36,11 +60,12 @@ def process_email_job(session: Session, email_id: str):
 
     # The raw dataset JSON is the source of truth for subject/body/attachments;
     # the DB row mirrors it for querying.
-    inbox_path = os.path.join(STORAGE_ROOT, "inbox", f"{email_id}.json")
+    current_root = resolve_storage_root(STORAGE_ROOT)
+    inbox_path = os.path.join(current_root, "inbox", f"{email_id}.json")
     with open(inbox_path) as f:
         email_json = json.load(f)
 
-    result = process_email(email_json, STORAGE_ROOT)
+    result = process_email(email_json, current_root)
 
     # --- resolve or create master shipment folder -------------------------
     shipment_ref = result.get("shipment_ref") or f"SHP-{email_id}"
@@ -204,7 +229,7 @@ def ingest_dataset(
     If overwrite is True, updates existing emails with new subject/body/from
     and resets their status to PENDING so they get re-verified.
     """
-    storage_root = storage_root or STORAGE_ROOT
+    storage_root = resolve_storage_root(storage_root)
     inbox_dir = os.path.join(storage_root, "inbox")
     created = 0
     updated = 0
@@ -225,7 +250,7 @@ def ingest_dataset(
                 existing.body = data.get("body", "")
                 existing.status = "PENDING"
                 existing.created_at = datetime.utcnow()
-                if owner and (not existing.owner or existing.owner == owner):
+                if owner:
                     existing.owner = owner
                     existing.organization = organization
                 session.add(existing)
