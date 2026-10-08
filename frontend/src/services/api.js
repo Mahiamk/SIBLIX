@@ -301,14 +301,40 @@ export async function apiUploadDataset(token, options = {}) {
   }
 
   // 3. Default: sync bundled disk dataset
-  const res = await fetch(`${API_BASE}/upload`, {
+  try {
+    const res = await fetch(`${API_BASE}/upload/sync-bundled`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        overwrite,
+        run_pipeline: runPipeline,
+      }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {}
+
+  // Fallback to /upload
+  const fallbackRes = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      overwrite,
+      run_pipeline: runPipeline,
+    }),
   });
-  if (!res.ok) {
-    throw new Error(`Upload sync failed`);
+  if (!fallbackRes.ok) {
+    const err = await fallbackRes.json().catch(() => ({}));
+    throw new Error(err.detail || 'Upload sync failed');
   }
-  return res.json();
+  return fallbackRes.json();
 }
 
 function findDocByType(documents, type) {
