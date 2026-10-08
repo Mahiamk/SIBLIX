@@ -414,9 +414,9 @@ npm install
 npm run dev
 ```
 
-### Default Credentials
-- **Username**: `admin`
-- **Password**: `admin123`
+### Demo Credentials
+- **Username**: `demo`
+- **Password**: `demo1234`
 *(Or click **One-Click Demo Sign In** directly from the UI).*
 
 ---
