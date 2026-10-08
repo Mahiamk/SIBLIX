@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import time
+from datetime import datetime, timezone
 from typing import Optional, List
 import zipfile
 
@@ -20,7 +21,13 @@ from app.models.discrepancy import ComparisonResult
 from app.models.review import Review
 from app.models.audit import AuditLog
 from app.services import llm
-from app.services.processing import ingest_dataset, process_email_job, resolve_storage_root
+from app.services.processing import (
+    ingest_dataset,
+    process_email_job,
+    resolve_storage_root,
+    get_bundled_storage_root,
+    get_writable_storage_root,
+)
 from app.services.scoping import get_scope_filter, can_user_access
 
 router = APIRouter(tags=["emails"], dependencies=[Depends(require_auth)])
@@ -156,7 +163,7 @@ def sync_bundled_dataset(
     user=Depends(get_current_user),
 ):
     """Sync the bundled 520 dataset directly from storage/inbox into database."""
-    storage_root = resolve_storage_root()
+    storage_root = get_bundled_storage_root()
     inbox_dir = os.path.join(storage_root, "inbox")
     if not os.path.exists(inbox_dir):
         raise HTTPException(
@@ -211,9 +218,9 @@ async def upload_dataset(
     """Upload dataset files (JSON emails, attachments, or ZIP bundles) or sync disk.
     Supports multipart/form-data, application/json, or empty request body.
     """
-    storage_root = resolve_storage_root()
-    inbox_dir = os.path.join(storage_root, "inbox")
-    attachments_dir = os.path.join(storage_root, "attachments")
+    writable_root = get_writable_storage_root()
+    inbox_dir = os.path.join(writable_root, "inbox")
+    attachments_dir = os.path.join(writable_root, "attachments")
     os.makedirs(inbox_dir, exist_ok=True)
     os.makedirs(attachments_dir, exist_ok=True)
 
@@ -246,17 +253,26 @@ async def upload_dataset(
             pass
 
     uploaded_email_ids = []
+    uploaded_records = {}
 
     if files:
         for file in files:
             filename = file.filename or ""
+            if filename.startswith(".") or filename.lower() in (".ds_store", "thumbs.db"):
+                continue
             content = await file.read()
             if filename.lower().endswith(".zip"):
                 with zipfile.ZipFile(io.BytesIO(content)) as z:
                     for zname in z.namelist():
-                        if zname.endswith("/") or zname.startswith("__MACOSX"):
-                            continue
                         base_zname = os.path.basename(zname)
+                        if (
+                            zname.endswith("/")
+                            or zname.startswith("__MACOSX")
+                            or "/__MACOSX" in zname
+                            or base_zname.startswith(".")
+                            or base_zname.lower() in (".ds_store", "thumbs.db")
+                        ):
+                            continue
                         data = z.read(zname)
                         if base_zname.lower().endswith(".json"):
                             dest = os.path.join(inbox_dir, base_zname)
@@ -264,8 +280,12 @@ async def upload_dataset(
                                 f.write(data)
                             try:
                                 j = json.loads(data.decode("utf-8", errors="ignore"))
-                                if "email_id" in j:
-                                    uploaded_email_ids.append(j["email_id"])
+                                if isinstance(j, dict):
+                                    eid = j.get("email_id") or j.get("id") or (os.path.splitext(base_zname)[0] if base_zname.startswith("email_") else None)
+                                    if eid:
+                                        j["email_id"] = eid
+                                        uploaded_records[eid] = j
+                                        uploaded_email_ids.append(eid)
                             except Exception:
                                 pass
                         else:
@@ -278,8 +298,12 @@ async def upload_dataset(
                     f.write(content)
                 try:
                     j = json.loads(content.decode("utf-8", errors="ignore"))
-                    if "email_id" in j:
-                        uploaded_email_ids.append(j["email_id"])
+                    if isinstance(j, dict):
+                        eid = j.get("email_id") or j.get("id") or (os.path.splitext(filename)[0] if filename.startswith("email_") else None)
+                        if eid:
+                            j["email_id"] = eid
+                            uploaded_records[eid] = j
+                            uploaded_email_ids.append(eid)
                 except Exception:
                     pass
             else:
@@ -287,13 +311,40 @@ async def upload_dataset(
                 with open(dest, "wb") as f:
                     f.write(content)
 
-        created = ingest_dataset(
-            session,
-            storage_root=storage_root,
-            overwrite=overwrite,
-            owner=user.username,
-            organization=user.organization,
-        )
+        created = 0
+        now_utc = datetime.now(timezone.utc)
+        if uploaded_records:
+            existing_emails = {
+                e.email_id: e for e in session.exec(
+                    select(Email).where(Email.email_id.in_(list(uploaded_records.keys())))
+                ).all()
+            }
+            for eid, data in uploaded_records.items():
+                existing = existing_emails.get(eid)
+                if existing:
+                    if overwrite:
+                        existing.sender = data.get("from", "")
+                        existing.subject = data.get("subject", "")
+                        existing.body = data.get("body", "")
+                        existing.status = "PENDING"
+                        existing.created_at = now_utc
+                        if user.username:
+                            existing.owner = user.username
+                            existing.organization = user.organization
+                        session.add(existing)
+                else:
+                    session.add(Email(
+                        email_id=eid,
+                        owner=user.username,
+                        organization=user.organization,
+                        sender=data.get("from", ""),
+                        subject=data.get("subject", ""),
+                        body=data.get("body", ""),
+                        status="PENDING",
+                        created_at=now_utc,
+                    ))
+                    created += 1
+
         total = len(session.exec(select(Email).where(get_scope_filter(Email, user))).all())
         session.add(DatasetUpload(
             owner=user.username,
@@ -306,15 +357,10 @@ async def upload_dataset(
         session.commit()
 
         queued = 0
-        if run_pipeline:
-            ids_to_process = uploaded_email_ids or [
-                e.email_id for e in session.exec(
-                    select(Email).where(Email.status == "PENDING", get_scope_filter(Email, user))
-                ).all()
-            ]
-            if ids_to_process and background_tasks:
-                background_tasks.add_task(_run_batch_pipeline, ids_to_process)
-                queued = len(ids_to_process)
+        if run_pipeline and uploaded_email_ids:
+            if background_tasks:
+                background_tasks.add_task(_run_batch_pipeline, uploaded_email_ids)
+                queued = len(uploaded_email_ids)
 
         return {
             "created": created,
@@ -324,9 +370,10 @@ async def upload_dataset(
         }
 
     # Default fallback: sync bundled storage/inbox dataset
+    bundled_root = get_bundled_storage_root()
     created = ingest_dataset(
         session,
-        storage_root=storage_root,
+        storage_root=bundled_root,
         overwrite=overwrite,
         owner=user.username,
         organization=user.organization,
@@ -374,9 +421,9 @@ def sync_custom_folder(
     if not os.path.exists(folder):
         raise HTTPException(status_code=400, detail=f"Directory does not exist: {folder}")
 
-    storage_root = resolve_storage_root()
-    inbox_dest = os.path.join(storage_root, "inbox")
-    att_dest = os.path.join(storage_root, "attachments")
+    writable_root = get_writable_storage_root()
+    inbox_dest = os.path.join(writable_root, "inbox")
+    att_dest = os.path.join(writable_root, "attachments")
     os.makedirs(inbox_dest, exist_ok=True)
     os.makedirs(att_dest, exist_ok=True)
 
@@ -385,7 +432,7 @@ def sync_custom_folder(
     # 1. Search for inbox / json files:
     inbox_src = os.path.join(folder, "inbox") if os.path.exists(os.path.join(folder, "inbox")) else folder
     for fname in os.listdir(inbox_src):
-        if fname.endswith(".json"):
+        if fname.endswith(".json") and not fname.startswith("."):
             src_f = os.path.join(inbox_src, fname)
             dst_f = os.path.join(inbox_dest, fname)
             shutil.copy2(src_f, dst_f)
@@ -401,13 +448,13 @@ def sync_custom_folder(
     att_src = os.path.join(folder, "attachments") if os.path.exists(os.path.join(folder, "attachments")) else folder
     if att_src != inbox_src:
         for fname in os.listdir(att_src):
-            if not fname.startswith(".") and not fname.endswith(".json"):
+            if not fname.startswith(".") and not fname.endswith(".json") and fname.lower() != ".ds_store":
                 shutil.copy2(os.path.join(att_src, fname), os.path.join(att_dest, fname))
 
     # 3. Ingest into database with overwrite so modified emails are updated
     created = ingest_dataset(
         session,
-        storage_root=storage_root,
+        storage_root=writable_root,
         overwrite=payload.overwrite,
         owner=user.username,
         organization=user.organization,

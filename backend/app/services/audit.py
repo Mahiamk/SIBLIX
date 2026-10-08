@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from sqlmodel import Session, select
 
@@ -38,7 +38,7 @@ def record_audit(
     user_email: Optional[str] = None,
 ) -> AuditLog:
     """Record an immutable, tamper-evident legal audit entry with SHA-256 cryptographic seal."""
-    ts = timestamp or datetime.utcnow()
+    ts = timestamp or datetime.now(timezone.utc)
     meta_str = json.dumps(metadata) if metadata else None
 
     # Derive operator_id / user_email if not explicitly provided

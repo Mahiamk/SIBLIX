@@ -64,6 +64,17 @@ def process_email(email, storage_root, extraction_cache=None):
     attachments_meta = []
     for rel_path in email.get("attachments", []):
         full_path = os.path.join(storage_root, rel_path)
+        if not os.path.exists(full_path):
+            for alt_root in [
+                "/tmp/storage",
+                os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage")),
+                os.path.abspath("backend/storage"),
+                os.path.abspath("storage"),
+            ]:
+                alt_full = os.path.join(alt_root, rel_path)
+                if os.path.exists(alt_full):
+                    full_path = alt_full
+                    break
         if extraction_cache is not None and rel_path in extraction_cache:
             extraction = extraction_cache[rel_path]
         else:

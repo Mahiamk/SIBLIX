@@ -2,7 +2,7 @@
 processing.py — bridges the pure pipeline (services/pipeline.py) to the
 database. This is what the FastAPI BackgroundTasks worker calls per email.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import os
 from typing import Optional, List
@@ -17,30 +17,79 @@ from app.models.discrepancy import ComparisonResult
 from app.services import normalizer as norm
 from app.services.pipeline import process_email
 
-def resolve_storage_root(override_path: Optional[str] = None) -> str:
-    """Robustly resolve the storage root containing 'inbox' and 'attachments'."""
-    candidates = []
-    if override_path:
-        candidates.append(os.path.abspath(override_path))
-        candidates.append(override_path)
-
+def get_bundled_storage_root() -> str:
+    """Find the directory containing the bundled inbox/*.json dataset files."""
+    candidates = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage")),
+        os.path.abspath("backend/storage"),
+        os.path.abspath("storage"),
+        "/var/task/backend/storage",
+    ]
     env_val = os.environ.get("STORAGE_ROOT")
     if env_val:
-        candidates.append(os.path.abspath(env_val))
+        candidates.insert(0, os.path.abspath(env_val))
         backend_base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        candidates.append(os.path.abspath(os.path.join(backend_base, env_val.lstrip("./"))))
-        candidates.append(env_val)
-
-    backend_default = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage"))
-    candidates.append(backend_default)
-    candidates.append(os.path.abspath("backend/storage"))
-    candidates.append(os.path.abspath("storage"))
+        candidates.insert(1, os.path.abspath(os.path.join(backend_base, env_val.lstrip("./"))))
 
     for path in candidates:
         if path and os.path.exists(os.path.join(path, "inbox")):
-            return os.path.abspath(path)
+            try:
+                jsons = [f for f in os.listdir(os.path.join(path, "inbox")) if f.endswith(".json")]
+                if len(jsons) > 0:
+                    return os.path.abspath(path)
+            except Exception:
+                pass
+    return candidates[0]
 
-    return backend_default
+
+def get_writable_storage_root() -> str:
+    """Return a directory path guaranteed to be writable (e.g. /tmp/storage on Vercel)."""
+    if os.environ.get("VERCEL"):
+        path = "/tmp/storage"
+        for sub in ("inbox", "attachments", "processed", "reports"):
+            os.makedirs(os.path.join(path, sub), exist_ok=True)
+        return path
+
+    candidate = os.environ.get("WRITABLE_STORAGE_ROOT") or resolve_storage_root()
+    try:
+        os.makedirs(os.path.join(candidate, "inbox"), exist_ok=True)
+        os.makedirs(os.path.join(candidate, "attachments"), exist_ok=True)
+        test_file = os.path.join(candidate, ".write_test")
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.remove(test_file)
+        return candidate
+    except Exception:
+        path = "/tmp/storage"
+        for sub in ("inbox", "attachments", "processed", "reports"):
+            os.makedirs(os.path.join(path, sub), exist_ok=True)
+        return path
+
+
+def resolve_storage_root(override_path: Optional[str] = None) -> str:
+    """Robustly resolve storage root, preferring directories that actually exist."""
+    if override_path and os.path.exists(override_path):
+        return os.path.abspath(override_path)
+    return get_bundled_storage_root()
+
+
+def find_inbox_file(email_id: str) -> Optional[str]:
+    """Search for an email JSON across writable (/tmp) and bundled storage roots."""
+    candidates = [
+        get_writable_storage_root(),
+        "/tmp/storage",
+        os.environ.get("STORAGE_ROOT", ""),
+        get_bundled_storage_root(),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "storage")),
+        os.path.abspath("backend/storage"),
+        os.path.abspath("storage"),
+    ]
+    for root in candidates:
+        if root:
+            p = os.path.join(root, "inbox", f"{email_id}.json")
+            if os.path.exists(p):
+                return p
+    return None
 
 
 STORAGE_ROOT = resolve_storage_root()
@@ -59,13 +108,13 @@ def process_email_job(session: Session, email_id: str):
     session.commit()
 
     # The raw dataset JSON is the source of truth for subject/body/attachments;
-    # the DB row mirrors it for querying.
-    current_root = resolve_storage_root(STORAGE_ROOT)
-    inbox_path = os.path.join(current_root, "inbox", f"{email_id}.json")
+    # search both writable and bundled inbox directories.
+    inbox_path = find_inbox_file(email_id) or os.path.join(STORAGE_ROOT, "inbox", f"{email_id}.json")
     with open(inbox_path) as f:
         email_json = json.load(f)
 
-    result = process_email(email_json, current_root)
+    effective_root = os.path.dirname(os.path.dirname(os.path.abspath(inbox_path))) if inbox_path and os.path.exists(inbox_path) else STORAGE_ROOT
+    result = process_email(email_json, effective_root)
 
     # --- resolve or create master shipment folder -------------------------
     shipment_ref = result.get("shipment_ref") or f"SHP-{email_id}"
@@ -124,7 +173,7 @@ def process_email_job(session: Session, email_id: str):
             folder.consignee_name = folder_consignee
         merged_types = list(set(folder.document_types_list() + doc_types))
         folder.document_types = ShipmentFolder.encode_list(merged_types)
-        folder.updated_at = datetime.utcnow()
+        folder.updated_at = datetime.now(timezone.utc)
         session.add(folder)
         session.commit()
 
@@ -229,42 +278,77 @@ def ingest_dataset(
     If overwrite is True, updates existing emails with new subject/body/from
     and resets their status to PENDING so they get re-verified.
     """
-    storage_root = resolve_storage_root(storage_root)
-    inbox_dir = os.path.join(storage_root, "inbox")
+    candidates = []
+    if storage_root:
+        candidates.append(os.path.join(storage_root, "inbox"))
+    candidates.append(os.path.join(get_bundled_storage_root(), "inbox"))
+    candidates.append("/tmp/storage/inbox")
+
+    inbox_dir = None
+    for cand in candidates:
+        if cand and os.path.exists(cand):
+            try:
+                if any(f.endswith(".json") and not f.startswith(".") for f in os.listdir(cand)):
+                    inbox_dir = cand
+                    break
+            except Exception:
+                pass
+
+    if not inbox_dir:
+        return 0
+
     created = 0
     updated = 0
-    if not os.path.exists(inbox_dir):
-        return created
+    now_utc = datetime.now(timezone.utc)
+
+    # Prefetch all existing emails in a single query to avoid 520 sequential network trips
+    existing_map = {e.email_id: e for e in session.exec(select(Email)).all()}
+
     for fname in sorted(os.listdir(inbox_dir)):
-        if not fname.endswith(".json"):
+        if not fname.endswith(".json") or fname.startswith("."):
             continue
-        with open(os.path.join(inbox_dir, fname)) as f:
-            data = json.load(f)
-        existing = session.exec(
-            select(Email).where(Email.email_id == data["email_id"])
-        ).first()
+        try:
+            with open(os.path.join(inbox_dir, fname)) as f:
+                data = json.load(f)
+        except Exception:
+            continue
+
+        if not isinstance(data, dict):
+            continue
+
+        email_id = data.get("email_id") or data.get("id")
+        if not email_id:
+            if fname.startswith("email_"):
+                email_id = os.path.splitext(fname)[0]
+            else:
+                continue
+
+        existing = existing_map.get(email_id)
         if existing:
             if overwrite:
                 existing.sender = data.get("from", "")
                 existing.subject = data.get("subject", "")
                 existing.body = data.get("body", "")
                 existing.status = "PENDING"
-                existing.created_at = datetime.utcnow()
+                existing.created_at = now_utc
                 if owner:
                     existing.owner = owner
                     existing.organization = organization
                 session.add(existing)
                 updated += 1
             continue
-        session.add(Email(
-            email_id=data["email_id"],
+        new_email = Email(
+            email_id=email_id,
             owner=owner,
             organization=organization,
             sender=data.get("from", ""),
             subject=data.get("subject", ""),
             body=data.get("body", ""),
             status="PENDING",
-        ))
+            created_at=now_utc,
+        )
+        session.add(new_email)
+        existing_map[email_id] = new_email
         created += 1
     session.commit()
     return created

@@ -10,7 +10,7 @@ through the identical five-stage pipeline.
 Mailboxes belong to the account that connected them; every route scopes its
 query by owner, so one user can never read or sync another user's inbox.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -227,7 +227,7 @@ def sync_account(
         ))
 
     account.last_uid = highest
-    account.last_synced_at = datetime.utcnow()
+    account.last_synced_at = datetime.now(timezone.utc)
     account.total_imported += len(imported)
     account.status = "CONNECTED"
     account.last_error = None

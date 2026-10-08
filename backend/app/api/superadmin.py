@@ -5,7 +5,7 @@ Provides comprehensive user management, role-based access control (RBAC),
 tenant/organization directory, security audit feed, and system telemetry.
 Protected strictly by require_superadmin dependency.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import os
 
@@ -282,14 +282,14 @@ def create_user(
         organization=(payload.organization or "").strip() or None,
         job_title=(payload.job_title or "").strip() or None,
         status=payload.status.strip().lower() if payload.status else "active",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
     )
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
 
     # Record administrative audit trail
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     audit_event = AuditLog(
         owner=admin.username,
         organization=admin.organization or "GLOBAL",
@@ -391,7 +391,7 @@ def update_user(
     session.refresh(target_user)
 
     # Log security update in audit logs
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     audit_event = AuditLog(
         owner=admin.username,
         organization=admin.organization or "GLOBAL",
@@ -439,7 +439,7 @@ def reset_user_password(
     session.commit()
 
     # Log password reset in audit logs
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     audit_event = AuditLog(
         owner=admin.username,
         organization=admin.organization or "GLOBAL",
@@ -477,7 +477,7 @@ def delete_user(
     session.delete(target_user)
     session.commit()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     audit_event = AuditLog(
         owner=admin.username,
         organization=admin.organization or "GLOBAL",

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -264,9 +264,9 @@ def submit_review(
         "notes": payload.notes,
         "voice_note": voice_note,
         "reviewer": operator_id,
-        "resolved_at": datetime.utcnow().isoformat(),
+        "resolved_at": datetime.now(timezone.utc).isoformat(),
     })
-    review.resolved_at = datetime.utcnow()
+    review.resolved_at = datetime.now(timezone.utc)
     session.add(review)
     session.commit()
     session.refresh(email)

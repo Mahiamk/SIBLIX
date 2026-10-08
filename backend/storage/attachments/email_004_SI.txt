@@ -1,15 +1,19 @@
-=== ETHIOPIAN SHIPPING INSTRUCTION (SI) ===
-Booking Ref: ESLSE-2026-BKG49182
-NBE Bank Permit: NBE/FE/PMT-409182
-Letter of Credit: LC/AWB/2026/8124
-Shipper/Exporter: Horizon Agri Export PLC
-Consignee: To Order of Awash Bank SC
-Notify Party: ESLSE Modjo Dry Port Customs Desk
-Port of Loading (Transit): DJIBOUTI (DJJIB)
-Final Port of Delivery (Dry Port): MODJO DRY PORT (ETQMN)
-HS Code: 0901.11
-Commodity Description: Grade 2 Washed Arabica Coffee - Sidama Type
-Container Count: 2X20'FCL
-Container Number: MSKU9182471
-Seal Number: ET-SEAL-89124
-Gross Weight: 19200 KG
+SHIPPING INSTRUCTION
+========================================
+
+Shipper: APRIL FAR EAST (M) SDN BHD
+  TOWER 2, AVENUE 5, LEVEL 6; BANGSAR SOUTH CITY, NO. 8 JALAN KERINCHI; 59200 KUALA LUMPUR, MALAYSIA
+Consignee (Non-Negotiable): EAST BRIGHT FZ-LLC
+  RAKEZ AMENITY CENTER; AL HAMRA INDUSTRIAL ZONE, RAK, UAE
+Notify: EAST BRIGHT FZ-LLC
+Port of Loading (POL): NANTONG, CHINA (CNNTG)
+POD: KARACHI, PAKISTAN (PKKHI)
+Total Containers: 6 x 40'HC
+Gross Wt (kgs): 131,058 KG
+Vessel: NAP 914 V.BS007
+Voyage: BS012
+Kinds of Packages; Description of Goods: COATED IVORY BOARD
+HS Code: 48105900
+Booking Ref: ONEYSINF32871
+OC No.: 5ALT-01226
+Freight: PREPAID

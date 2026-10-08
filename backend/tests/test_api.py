@@ -161,6 +161,18 @@ def test_upload_and_list_emails():
     assert len(r.json()) <= 5
 
 
+def test_upload_single_file_multipart():
+    _auth_bypass()
+    import io
+    content = b'{"email_id": "test_single_upload_01", "from": "shipper@example.com", "subject": "Test B/L", "body": "Body"}'
+    files = {"files": ("test_single_upload_01.json", io.BytesIO(content), "application/json")}
+    r = client.post("/upload", files=files)
+    assert r.status_code == 200
+    data = r.json()
+    assert data["uploaded_files"] == 1
+    assert data["created"] >= 0
+
+
 def test_process_single_email_and_read_detail():
     _auth_bypass()
     r = client.get("/emails?limit=1")

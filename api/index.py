@@ -14,17 +14,16 @@ if str(BACKEND_DIR) not in sys.path:
 
 # Ensure storage path is writable on Vercel (/tmp is the only writable directory on AWS Lambda / Vercel)
 if os.environ.get("VERCEL"):
-    os.environ.setdefault("STORAGE_ROOT", "/tmp/storage")
-    os.makedirs("/tmp/storage", exist_ok=True)
-    os.makedirs("/tmp/storage/inbox", exist_ok=True)
-    os.makedirs("/tmp/storage/processed", exist_ok=True)
-    os.makedirs("/tmp/storage/reports", exist_ok=True)
+    os.environ["STORAGE_ROOT"] = "/tmp/storage"
+    os.environ["WRITABLE_STORAGE_ROOT"] = "/tmp/storage"
+    for d in ["inbox", "attachments", "processed", "reports"]:
+        os.makedirs(f"/tmp/storage/{d}", exist_ok=True)
 
 # Load backend/.env if present
 env_path = BACKEND_DIR / ".env"
 if env_path.exists():
     from dotenv import load_dotenv
-    load_dotenv(env_path)
+    load_dotenv(env_path, override=False)
 
 from app.main import app
 
