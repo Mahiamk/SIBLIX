@@ -417,6 +417,7 @@ npm run dev
 ### Demo Credentials
 - **Username**: `demo`
 - **Password**: `demo1234`
+- Dataset for benchmarking is included in the demo account
 *(Or click **One-Click Demo Sign In** directly from the UI).*
 
 ---
