@@ -42,6 +42,16 @@ export function LoginPage() {
     }
   };
 
+  const handleDemoSignIn = async () => {
+    setUser('demo');
+    setPass('demo1234');
+    setFormError('');
+    const res = await handleLogin('demo', 'demo1234');
+    if (res && !res.ok) {
+      setFormError(res.error || 'Demo sign-in failed');
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-canvas-light flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm text-center space-y-2 mb-5 sm:mb-6">
@@ -262,6 +272,32 @@ export function LoginPage() {
               {mode === 'signin' ? 'Sign In' : 'Create Account'}
             </Button>
           </form>
+
+          {mode === 'signin' && (
+            <div className="pt-1">
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-slate-200"></div>
+                <span className="flex-shrink mx-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Quick Access
+                </span>
+                <div className="flex-grow border-t border-slate-200"></div>
+              </div>
+
+              <button
+                type="button"
+                id="demo-signin-btn"
+                onClick={handleDemoSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-brand-300 bg-brand-50/70 hover:bg-brand-100/70 text-brand-700 hover:text-brand-800 text-xs font-semibold transition-all hover:border-brand-400 active:scale-[0.99] disabled:opacity-50 cursor-pointer shadow-xs"
+              >
+                <PhosphorIcon name="Sparkle" size={16} weight="fill" className="text-brand-500" />
+                <span>One-Click Demo Sign In</span>
+                <span className="text-[11px] text-brand-600/80 font-normal bg-white/90 border border-brand-200/80 px-1.5 py-0.5 rounded ml-1">
+                  demo / demo1234
+                </span>
+              </button>
+            </div>
+          )}
 
           {mode === 'signin' && (
             <div className="pt-3 border-t border-slate-100 text-center text-xs text-slate-500">
