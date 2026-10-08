@@ -6,7 +6,7 @@ import time
 from typing import Optional, List
 import zipfile
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, Request
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -20,7 +20,7 @@ from app.models.discrepancy import ComparisonResult
 from app.models.review import Review
 from app.models.audit import AuditLog
 from app.services import llm
-from app.services.processing import ingest_dataset, process_email_job
+from app.services.processing import ingest_dataset, process_email_job, resolve_storage_root
 from app.services.scoping import get_scope_filter, can_user_access
 
 router = APIRouter(tags=["emails"], dependencies=[Depends(require_auth)])
@@ -143,27 +143,107 @@ class FolderSyncRequest(BaseModel):
     run_pipeline: bool = True
 
 
+class BundledSyncRequest(BaseModel):
+    overwrite: bool = True
+    run_pipeline: bool = True
+
+
+@router.post("/upload/sync-bundled")
+def sync_bundled_dataset(
+    background_tasks: BackgroundTasks,
+    payload: BundledSyncRequest = BundledSyncRequest(),
+    session: Session = Depends(get_session),
+    user=Depends(get_current_user),
+):
+    """Sync the bundled 520 dataset directly from storage/inbox into database."""
+    storage_root = resolve_storage_root()
+    inbox_dir = os.path.join(storage_root, "inbox")
+    if not os.path.exists(inbox_dir):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Bundled dataset inbox directory not found at {inbox_dir}",
+        )
+
+    created = ingest_dataset(
+        session,
+        storage_root=storage_root,
+        overwrite=payload.overwrite,
+        owner=user.username,
+        organization=user.organization,
+    )
+    total = len(session.exec(select(Email).where(get_scope_filter(Email, user))).all())
+
+    session.add(DatasetUpload(
+        owner=user.username,
+        organization=user.organization,
+        source="bundled",
+        label="Bundled shipping dataset (storage/inbox)",
+        emails_created=created,
+        emails_total=total,
+    ))
+    session.commit()
+
+    queued = 0
+    if payload.run_pipeline:
+        target_emails = session.exec(
+            select(Email).where(Email.status == "PENDING", get_scope_filter(Email, user))
+        ).all()
+        target_ids = [e.email_id for e in target_emails]
+        if target_ids and background_tasks:
+            background_tasks.add_task(_run_batch_pipeline, target_ids)
+            queued = len(target_ids)
+
+    return {
+        "ok": True,
+        "created": created,
+        "total_emails": total,
+        "queued_for_processing": queued,
+    }
+
+
 @router.post("/upload")
 async def upload_dataset(
+    request: Request,
     background_tasks: BackgroundTasks,
-    files: Optional[List[UploadFile]] = File(None),
-    overwrite: bool = Form(True),
-    run_pipeline: bool = Form(True),
     session: Session = Depends(get_session),
     user=Depends(get_current_user),
 ):
     """Upload dataset files (JSON emails, attachments, or ZIP bundles) or sync disk.
-    If files are sent, saves them to storage/inbox and storage/attachments,
-    upserts into the database, and queues for verification.
-    If no files are sent, syncs the bundled storage/inbox dataset.
+    Supports multipart/form-data, application/json, or empty request body.
     """
-    storage_root = os.environ.get(
-        "STORAGE_ROOT", os.path.join(os.path.dirname(__file__), "..", "..", "storage")
-    )
+    storage_root = resolve_storage_root()
     inbox_dir = os.path.join(storage_root, "inbox")
     attachments_dir = os.path.join(storage_root, "attachments")
     os.makedirs(inbox_dir, exist_ok=True)
     os.makedirs(attachments_dir, exist_ok=True)
+
+    content_type = request.headers.get("content-type", "").lower()
+    files = []
+    overwrite = True
+    run_pipeline = True
+
+    if "multipart/form-data" in content_type:
+        try:
+            form = await request.form()
+            form_files = form.getlist("files")
+            for f in form_files:
+                if hasattr(f, "filename") and f.filename:
+                    files.append(f)
+            if "overwrite" in form:
+                val = str(form.get("overwrite", "true")).lower()
+                overwrite = val in ("true", "1", "yes")
+            if "run_pipeline" in form:
+                val = str(form.get("run_pipeline", "true")).lower()
+                run_pipeline = val in ("true", "1", "yes")
+        except Exception:
+            pass
+    elif "application/json" in content_type:
+        try:
+            body = await request.json()
+            overwrite = bool(body.get("overwrite", True))
+            run_pipeline = bool(body.get("run_pipeline", True))
+        except Exception:
+            pass
 
     uploaded_email_ids = []
 
@@ -225,20 +305,22 @@ async def upload_dataset(
         ))
         session.commit()
 
+        queued = 0
         if run_pipeline:
             ids_to_process = uploaded_email_ids or [
                 e.email_id for e in session.exec(
                     select(Email).where(Email.status == "PENDING", get_scope_filter(Email, user))
                 ).all()
             ]
-            for eid in ids_to_process:
-                background_tasks.add_task(_run_process_job, eid)
+            if ids_to_process and background_tasks:
+                background_tasks.add_task(_run_batch_pipeline, ids_to_process)
+                queued = len(ids_to_process)
 
         return {
             "created": created,
             "total_emails": total,
             "uploaded_files": len(files),
-            "queued_for_processing": len(ids_to_process) if run_pipeline else 0,
+            "queued_for_processing": queued,
         }
 
     # Default fallback: sync bundled storage/inbox dataset
@@ -259,7 +341,23 @@ async def upload_dataset(
         emails_total=total,
     ))
     session.commit()
-    return {"created": created, "total_emails": total}
+
+    queued = 0
+    if run_pipeline:
+        target_emails = session.exec(
+            select(Email).where(Email.status == "PENDING", get_scope_filter(Email, user))
+        ).all()
+        target_ids = [e.email_id for e in target_emails]
+        if target_ids and background_tasks:
+            background_tasks.add_task(_run_batch_pipeline, target_ids)
+            queued = len(target_ids)
+
+    return {
+        "ok": True,
+        "created": created,
+        "total_emails": total,
+        "queued_for_processing": queued,
+    }
 
 
 @router.post("/upload/sync-folder")
@@ -276,9 +374,7 @@ def sync_custom_folder(
     if not os.path.exists(folder):
         raise HTTPException(status_code=400, detail=f"Directory does not exist: {folder}")
 
-    storage_root = os.environ.get(
-        "STORAGE_ROOT", os.path.join(os.path.dirname(__file__), "..", "..", "storage")
-    )
+    storage_root = resolve_storage_root()
     inbox_dest = os.path.join(storage_root, "inbox")
     att_dest = os.path.join(storage_root, "attachments")
     os.makedirs(inbox_dest, exist_ok=True)
